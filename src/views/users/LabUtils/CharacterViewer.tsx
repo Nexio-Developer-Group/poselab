@@ -75,6 +75,7 @@ const PRESET_POSES = {
     head: { x: 5, y: 0, z: 0 },
     body: { x: 5, y: 0, z: 0 },
   },
+  // sample change
   combat: {
     leftUpperArm: { x: -45, y: 30, z: 0 },
     leftLowerArm: { x: -90, y: 0, z: 0 },
