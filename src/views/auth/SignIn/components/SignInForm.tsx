@@ -103,9 +103,7 @@ const SignInForm = (props: SignInFormProps) => {
                         rules={{ required: true }}
                         render={({ field }) => (
                             <PasswordInput
-                                type="text"
                                 placeholder="Password"
-                                autoComplete="off"
                                 {...field}
                             />
                         )}
@@ -113,10 +111,9 @@ const SignInForm = (props: SignInFormProps) => {
                 </FormItem>
                 {passwordHint}
                 <Button
-                    block
-                    loading={isSubmitting}
-                    variant="solid"
+                    variant="default"
                     type="submit"
+                    className='w-full'
                 >
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
                 </Button>

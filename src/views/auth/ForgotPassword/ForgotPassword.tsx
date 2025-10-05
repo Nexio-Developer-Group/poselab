@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Alert from '@/components/ui/Alert'
+import {Alert} from '@/components/ui/alert'
 import {Button} from '@/components/ui/Button'
 import ActionLink from '@/components/shared/ActionLink'
 import ForgotPasswordForm from './components/ForgotPasswordForm'
@@ -43,7 +43,7 @@ export const ForgotPasswordBase = ({
                 )}
             </div>
             {message && (
-                <Alert showIcon className="mb-4" type="danger">
+                <Alert className="mb-4">
                     <span className="break-all">{message}</span>
                 </Alert>
             )}

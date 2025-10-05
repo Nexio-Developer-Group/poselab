@@ -106,4 +106,60 @@ export default tseslint.config(
             '@typescript-eslint/no-unused-expressions': 'off',
         },
     },
+{
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    rules: {
+        // Ignore React warnings for Three.js props
+        'react/no-unknown-property': [
+            'error',
+            {
+                ignore: [
+                    'attach',
+                    'args',
+                    'geometry',
+                    'material',
+                    'position',
+                    'rotation',
+                    'scale',
+                    'castShadow',
+                    'receiveShadow',
+                    'intensity',
+                    'color',
+                    'toneMapped',
+                    'side',
+                    'map',
+                    'roughness',
+                    'metalness',
+                    'envMapIntensity',
+                    'distance',
+                    'decay',
+                    'angle',
+                    'penumbra',
+                    'target',
+                    'fog',
+                    'layers',
+                    'near',
+                    'far',
+                    'fov',
+                    'aspect',
+                    'focus',
+                    'shadow-mapSize',
+                    'shadow-bias',
+                    'shadow-radius',
+                    'frustumCulled',
+                    'visible',
+                    'userData',
+                    'attachArray',
+                    'attachObject',
+                ],
+            },
+        ],
+
+        // Disable prop sorting for R3F components
+        'react/jsx-sort-props': 'off',
+    },
+},
+
+
+
 )

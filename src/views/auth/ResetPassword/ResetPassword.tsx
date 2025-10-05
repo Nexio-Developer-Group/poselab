@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Alert from '@/components/ui/Alert'
+import {Alert} from '@/components/ui/alert'
 import { Button } from '@/components/ui/Button'
 import ActionLink from '@/components/shared/ActionLink'
 import ResetPasswordForm from './components/ResetPasswordForm'
@@ -43,7 +43,7 @@ export const ResetPasswordBase = ({
                 )}
             </div>
             {message && (
-                <Alert showIcon className="mb-4" type="danger">
+                <Alert>
                     <span className="break-all">{message}</span>
                 </Alert>
             )}
@@ -53,8 +53,7 @@ export const ResetPasswordBase = ({
                 setResetComplete={setResetComplete}
             >
                 <Button
-                    block
-                    variant="solid"
+                    variant="default"
                     type="button"
                     onClick={handleContinue}
                 >

@@ -1,5 +1,5 @@
 import Logo from '@/components/template/Logo'
-import Alert from '@/components/ui/Alert'
+import {Alert} from '@/components/ui/alert'
 import SignUpForm from './components/SignUpForm'
 import ActionLink from '@/components/shared/ActionLink'
 import useTimeOutMessage from '@/utils/hooks/useTimeOutMessage'
@@ -30,7 +30,7 @@ export const SignUpBase = ({
                 </p>
             </div>
             {message && (
-                <Alert showIcon className="mb-4" type="danger">
+                <Alert>
                     <span className="break-all">{message}</span>
                 </Alert>
             )}
