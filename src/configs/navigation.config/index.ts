@@ -111,15 +111,25 @@ const navigationConfig: NavigationTree[] = [
     },
     {
         key: 'termsAndConditions',
-        path: '/terms-and-conditions',
-        title: 'Terms & Conditions',
+        path: '/terms-of-service',
+        title: 'Terms of Service',
         translateKey: 'nav.termsAndConditions',
         icon: 'termsAndConditions',
         type: NAV_ITEM_TYPE_ITEM,
         authority: [],
         subMenu: [],
     },
-    
+    {
+        key: 'privacyPolicy',
+        path: '/privacy-policy',
+        title: 'Privacy Policy',
+        translateKey: 'nav.privacyPolicy',
+        icon: 'privacyPolicy',
+        type: NAV_ITEM_TYPE_ITEM,
+        authority: [],
+        subMenu: [],
+    },
+
 ]
 
 export default navigationConfig

@@ -54,15 +54,30 @@ export async function getRedirectresult(): Promise<UserCredential | null> {
     }
 }
 
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+
 export async function sendPhoneOTP(phoneNumber: string): Promise<ConfirmationResult> {
-    const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-    })
-    return signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier)
+  if (!recaptchaVerifier) {
+    recaptchaVerifier = new RecaptchaVerifier(
+      auth,
+      "recaptcha-container",
+      {
+        size: "invisible",
+        callback: () => {
+          console.log("reCAPTCHA solved");
+        },
+      }
+    );
+  }
+
+  return await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
 }
 
-export async function verifyPhoneOTP(confirmationResult: ConfirmationResult, otp: string): Promise<UserCredential> {
-    return confirmationResult.confirm(otp)
+export async function verifyPhoneOTP(
+  confirmationResult: ConfirmationResult,
+  otp: string
+) {
+  return await confirmationResult.confirm(otp);
 }
 
 export async function getIdToken(userCredential: UserCredential): Promise<string> {

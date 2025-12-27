@@ -52,8 +52,18 @@ const Simple = ({ children, content, ...rest }: SimpleProps) => {
             </main>
             <footer className="py-6 border-t border-white/5 bg-gray-950">
                 <div className="mx-auto px-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="text-gray-100 text-sm font-medium">
-                        © {new Date().getFullYear()} Pose Lab. All rights reserved.
+                    <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+                        <div className="text-gray-100 text-sm font-medium">
+                            © {new Date().getFullYear()} Pose Lab. All rights reserved.
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <Link to="/privacy-policy" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">
+                                Privacy Policy
+                            </Link>
+                            <Link to="/terms-of-service" className="text-xs font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest">
+                                Terms of Service
+                            </Link>
+                        </div>
                     </div>
                     <div className="flex items-center gap-1.5 text-sm font-bold text-gray-100">
                         <span className="opacity-60 font-medium">Created with</span>
