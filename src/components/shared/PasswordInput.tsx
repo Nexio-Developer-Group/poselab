@@ -25,10 +25,10 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     return (
       <Input
         ref={ref}
+        className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium pr-10"
         type={isVisible ? "text" : "password"}
         value={value}
         placeholder={placeholder}
-        className="pr-10"
         suffix={
           <span
             className="cursor-pointer select-none text-xl"

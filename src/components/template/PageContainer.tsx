@@ -149,7 +149,7 @@ const PageContainer = (props: PageContainerProps) => {
                     className={classNames(
                         defaultClass,
                         pageBackgroundType === 'plain' &&
-                            'bg-white dark:bg-gray-900',
+                        'bg-white dark:bg-gray-950',
                     )}
                 >
                     <main className="h-full">
@@ -157,9 +157,9 @@ const PageContainer = (props: PageContainerProps) => {
                             className={classNames(
                                 pageContainerDefaultClass,
                                 pageContainerType !== 'gutterless' &&
-                                    pageContainerGutterClass,
+                                pageContainerGutterClass,
                                 pageContainerType === 'contained' &&
-                                    'container mx-auto',
+                                'container mx-auto',
                                 !footer && 'pb-0 sm:pb-0 md:pb-0',
                             )}
                         >

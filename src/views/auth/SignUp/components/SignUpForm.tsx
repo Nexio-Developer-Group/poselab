@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import {Input} from '@/components/ui/Input'
-import {Button} from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 import { FormItem, Form } from '@/components/ui/Form'
 import { useAuth } from '@/auth'
+import { cn } from "@/lib/utils"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -66,85 +67,94 @@ const SignUpForm = (props: SignUpFormProps) => {
     }
 
     return (
-        <div className={className}>
+        <div className={cn(className, "animate-in fade-in slide-in-from-bottom-4 duration-700")}>
             <Form onSubmit={handleSubmit(onSignUp)}>
-                <FormItem
-                    label="User name"
-                    invalid={Boolean(errors.userName)}
-                    errorMessage={errors.userName?.message}
-                >
-                    <Controller
-                        name="userName"
-                        control={control}
-                        render={({ field }) => (
-                            <Input
-                                type="text"
-                                placeholder="User Name"
-                                autoComplete="off"
-                                {...field}
+                <div className="space-y-4">
+                    <FormItem
+                        label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Alias Name</span>}
+                        invalid={Boolean(errors.userName)}
+                        errorMessage={errors.userName?.message}
+                    >
+                        <Controller
+                            name="userName"
+                            control={control}
+                            render={({ field }) => (
+                                <Input
+                                    type="text"
+                                    className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium"
+                                    placeholder="Steve / Alex"
+                                    autoComplete="off"
+                                    {...field}
+                                />
+                            )}
+                        />
+                    </FormItem>
+                    <FormItem
+                        label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Digital Address</span>}
+                        invalid={Boolean(errors.email)}
+                        errorMessage={errors.email?.message}
+                    >
+                        <Controller
+                            name="email"
+                            control={control}
+                            render={({ field }) => (
+                                <Input
+                                    className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium"
+                                    type="email"
+                                    placeholder="commander@poselab.gg"
+                                    autoComplete="off"
+                                    {...field}
+                                />
+                            )}
+                        />
+                    </FormItem>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormItem
+                            label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Password</span>}
+                            invalid={Boolean(errors.password)}
+                            errorMessage={errors.password?.message}
+                        >
+                            <Controller
+                                name="password"
+                                control={control}
+                                render={({ field }) => (
+                                    <Input
+                                        className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium"
+                                        type="password"
+                                        autoComplete="off"
+                                        placeholder="••••••••"
+                                        {...field}
+                                    />
+                                )}
                             />
-                        )}
-                    />
-                </FormItem>
-                <FormItem
-                    label="Email"
-                    invalid={Boolean(errors.email)}
-                    errorMessage={errors.email?.message}
-                >
-                    <Controller
-                        name="email"
-                        control={control}
-                        render={({ field }) => (
-                            <Input
-                                type="email"
-                                placeholder="Email"
-                                autoComplete="off"
-                                {...field}
+                        </FormItem>
+                        <FormItem
+                            label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Confirm</span>}
+                            invalid={Boolean(errors.confirmPassword)}
+                            errorMessage={errors.confirmPassword?.message}
+                        >
+                            <Controller
+                                name="confirmPassword"
+                                control={control}
+                                render={({ field }) => (
+                                    <Input
+                                        className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium"
+                                        type="password"
+                                        autoComplete="off"
+                                        placeholder="••••••••"
+                                        {...field}
+                                    />
+                                )}
                             />
-                        )}
-                    />
-                </FormItem>
-                <FormItem
-                    label="Password"
-                    invalid={Boolean(errors.password)}
-                    errorMessage={errors.password?.message}
-                >
-                    <Controller
-                        name="password"
-                        control={control}
-                        render={({ field }) => (
-                            <Input
-                                type="password"
-                                autoComplete="off"
-                                placeholder="Password"
-                                {...field}
-                            />
-                        )}
-                    />
-                </FormItem>
-                <FormItem
-                    label="Confirm Password"
-                    invalid={Boolean(errors.confirmPassword)}
-                    errorMessage={errors.confirmPassword?.message}
-                >
-                    <Controller
-                        name="confirmPassword"
-                        control={control}
-                        render={({ field }) => (
-                            <Input
-                                type="password"
-                                autoComplete="off"
-                                placeholder="Confirm Password"
-                                {...field}
-                            />
-                        )}
-                    />
-                </FormItem>
+                        </FormItem>
+                    </div>
+                </div>
                 <Button
                     variant="default"
                     type="submit"
+                    className="w-full h-12 bg-primary hover:bg-primary text-black font-bold rounded-xl shadow-xl shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200 mt-8"
                 >
-                    {isSubmitting ? 'Creating Account...' : 'Sign Up'}
+                    {isSubmitting ? 'GENERATING IDENTITY...' : 'CREATE STUDIO ACCOUNT'}
                 </Button>
             </Form>
         </div>

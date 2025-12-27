@@ -70,11 +70,22 @@ export const useToken = () => {
     const storage = getPersistStorage()
 
     const setToken = (token: string) => {
-        storage.setItem(TOKEN_NAME_IN_STORAGE, token)
+        if (token) {
+            localStorage.setItem(TOKEN_NAME_IN_STORAGE, token)
+            sessionStorage.setItem(TOKEN_NAME_IN_STORAGE, token)
+            cookiesStorage.setItem(TOKEN_NAME_IN_STORAGE, token, 7)
+        } else {
+            localStorage.removeItem(TOKEN_NAME_IN_STORAGE)
+            sessionStorage.removeItem(TOKEN_NAME_IN_STORAGE)
+            cookiesStorage.removeItem(TOKEN_NAME_IN_STORAGE)
+        }
     }
 
     return {
         setToken,
-        token: storage.getItem(TOKEN_NAME_IN_STORAGE),
+        token: storage.getItem(TOKEN_NAME_IN_STORAGE) ||
+            localStorage.getItem(TOKEN_NAME_IN_STORAGE) ||
+            sessionStorage.getItem(TOKEN_NAME_IN_STORAGE) ||
+            (cookiesStorage.getItem(TOKEN_NAME_IN_STORAGE) as string),
     }
 }

@@ -14,11 +14,11 @@ const CollapsibleSide = ({ children }: CommonProps) => {
     return (
         <LayoutBase
             type={LAYOUT_COLLAPSIBLE_SIDE}
-            className="app-layout-collapsible-side flex flex-auto flex-col"
+            className="app-layout-collapsible-side flex flex-auto flex-col dark:bg-gray-950"
         >
             <div className="flex flex-auto min-w-0">
                 {larger.lg && <SideNav />}
-                <div className="flex flex-col flex-auto min-h-screen min-w-0 relative w-full">
+                <div className="flex flex-col flex-auto min-h-screen min-w-0 relative w-full dark:bg-gray-950">
                     <Header
                         className="shadow-sm dark:shadow-2xl"
                         headerStart={

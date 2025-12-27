@@ -13,23 +13,24 @@ const Simple = ({ children, content, ...rest }: SimpleProps) => {
 
 
     return (
-        <div className="min-h-[1024px]">
-            <header className="bg-white z-50 sticky top-0 border-b border-gray-200 shadow-xs">
+        <div className="min-h-[1024px] dark:bg-gray-950">
+            <header className="bg-white dark:bg-gray-950 z-50 sticky top-0 border-b border-gray-200 dark:border-white/10 shadow-xs">
                 <div className="mx-auto px-10 py-4 flex items-center justify-between">
                     <Link to="/home">
-                        <Logo className="hidden lg:block" imgClass="max-h-10" />
+                        <Logo mode="dark" className="hidden lg:block" imgClass="max-h-10" />
                     </Link>
                     <div className='flex items-center gap-10'>
-                        <Link to="/about"> <p className='text-primary-text cusror-pointer font-normal text-base'>About</p></Link>
-                        <Link to="/join-us"> <p className='text-primary-text cusror-pointer font-normal text-base'>Join us</p></Link>
-                        <Link to="/services"> <p className='text-primary-text cusror-pointer font-normal text-base'>Services</p></Link>
+                        <Link to="/about"> <p className='text-primary-text dark:text-gray-100 cusror-pointer font-normal text-base hover:text-primary dark:hover:text-white transition-colors'>About</p></Link>
+                        <Link to="/join-us"> <p className='text-primary-text dark:text-gray-100 cusror-pointer font-normal text-base hover:text-primary dark:hover:text-white transition-colors'>Join us</p></Link>
+                        <Link to="/services"> <p className='text-primary-text dark:text-gray-100 cusror-pointer font-normal text-base hover:text-primary dark:hover:text-white transition-colors'>Services</p></Link>
                         <div className='flex items-center gap-6'>
 
-                        <Link to="/home">
-                        <Button
-                            variant="default"
-                        >SignUp / Login</Button>
-                        </Link>
+                            <Link to="/sign-in">
+                                <Button
+                                    variant="default"
+                                    className="bg-primary hover:bg-primary-deep text-black border-none shadow-lg shadow-primary/20"
+                                >SignUp / Login</Button>
+                            </Link>
                         </div>
 
                     </div>
@@ -38,17 +39,37 @@ const Simple = ({ children, content, ...rest }: SimpleProps) => {
             <main>
                 <div>
 
-                {content}
-                {
-                    children
-                        ? cloneElement(children as ReactElement, {
-                            ...rest,
-                        })
-                        : null
-                }
+                    {content}
+                    {
+                        children
+                            ? cloneElement(children as ReactElement, {
+                                ...rest,
+                            })
+                            : null
+                    }
                 </div>
 
             </main>
+            <footer className="py-6 border-t border-white/5 bg-gray-950">
+                <div className="mx-auto px-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="text-gray-100 text-sm font-medium">
+                        © {new Date().getFullYear()} Pose Lab. All rights reserved.
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sm font-bold text-gray-100">
+                        <span className="opacity-60 font-medium">Created with</span>
+                        <span className="text-red-500 animate-pulse text-lg">❤️</span>
+                        <span className="opacity-60 font-medium">by</span>
+                        <a
+                            href="https://nexiotech.cloud/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-white transition-all duration-300 underline decoration-primary/30 underline-offset-4 hover:decoration-white"
+                        >
+                            Nexio Technologies
+                        </a>
+                    </div>
+                </div>
+            </footer>
         </div>
     )
 }

@@ -2,24 +2,29 @@ import { useMemo, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 
 interface Vec3 { x: number; y: number; z: number }
-interface LimbPose {
-  position: Vec3;  
-  bend: number;    
-}
 
 interface MinecraftCharacterProps {
   skinImage: HTMLImageElement;
   pose: {
-    leftArm: LimbPose;
-    rightArm: LimbPose;
-    leftLeg: LimbPose;
-    rightLeg: LimbPose;
+    leftUpperArm: Vec3;
+    leftLowerArm: Vec3;
+    rightUpperArm: Vec3;
+    rightLowerArm: Vec3;
+    leftUpperLeg: Vec3;
+    leftLowerLeg: Vec3;
+    rightUpperLeg: Vec3;
+    rightLowerLeg: Vec3;
     head: Vec3;
     body: Vec3;
   };
+  facial?: {
+    eyes?: { x: number; y: number; blink: number };
+    mouth?: { smile: number; open: number };
+    eyebrows?: { left: number; right: number };
+  };
 }
 
-export function BendableMinecraftCharacter({ skinImage, pose }: MinecraftCharacterProps) {
+export function BendableMinecraftCharacter({ skinImage, pose, facial }: MinecraftCharacterProps) {
   const groupRef = useRef<THREE.Group>(null);
 
   // Create material helper
@@ -34,37 +39,59 @@ export function BendableMinecraftCharacter({ skinImage, pose }: MinecraftCharact
     texture.flipY = false;
     texture.magFilter = THREE.NearestFilter;
     texture.minFilter = THREE.NearestFilter;
-    return new THREE.MeshPhongMaterial({ map: texture, skinning: true });
+    return new THREE.MeshPhongMaterial({ map: texture });
+  }, [skinImage]);
+
+  // Facials: System for swapping eye/mouth textures
+  const createSubTextureMaterial = useCallback((x: number, y: number, w: number, h: number, opacity = 1) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = w * 8;
+    canvas.height = h * 8;
+    const ctx = canvas.getContext("2d")!;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(skinImage, x, y, w, h, 0, 0, w * 8, h * 8);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.magFilter = THREE.NearestFilter;
+    texture.minFilter = THREE.NearestFilter;
+    return new THREE.MeshLambertMaterial({ map: texture, transparent: true, opacity });
   }, [skinImage]);
 
   // Create a complete limb with two-bone system
   const createLimbSystem = useCallback(() => {
     const upperBone = new THREE.Bone();
     const lowerBone = new THREE.Bone();
-    
+
     // Position bones correctly for a 12-unit tall limb
-    upperBone.position.set(0, 3, 0);  // Upper bone at top third
-    lowerBone.position.set(0, -6, 0); // Lower bone 6 units down (joint at middle)
+    // Joint at center (elevation 0)
+    upperBone.position.set(0, 6, 0);  // Pivot at top
+    lowerBone.position.set(0, -6, 0); // Joint at middle
     upperBone.add(lowerBone);
 
-    const geometry = new THREE.BoxGeometry(4, 12, 4);
+    // Subdivide geometry for smooth bending: (width, height, depth, widthSegments, heightSegments, depthSegments)
+    const geometry = new THREE.BoxGeometry(4, 12, 4, 1, 32, 1);
     const positions = geometry.attributes.position;
-    
+
     const skinIndices: number[] = [];
     const skinWeights: number[] = [];
-    
-    // Weight vertices based on Y position
+
+    // Weight vertices based on Y position for a smooth transition at the joint
     for (let i = 0; i < positions.count; i++) {
       const y = positions.getY(i);
-      if (y > 0) {
-        // Top half - upper bone (index 0)
-        skinIndices.push(0, 0, 0, 0);
-        skinWeights.push(1, 0, 0, 0);
-      } else {
-        // Bottom half - lower bone (index 1)
-        skinIndices.push(1, 0, 0, 0);
-        skinWeights.push(1, 0, 0, 0);
-      }
+
+      // y ranges from -6 to 6
+      // Bone 0 is upperBone (influence at top), Bone 1 is lowerBone (influence at bottom)
+      // However, the skeleton will be [upperBone, lowerBone]
+      // Weights should be:
+      // y = 6: upper=1, lower=0
+      // y = 0: upper=0.5, lower=0.5
+      // y = -6: upper=0, lower=1
+
+      // Weight for upper bone (index 0)
+      const weightUpper = THREE.MathUtils.smoothstep(y, -3, 3);
+      const weightLower = 1 - weightUpper;
+
+      skinIndices.push(0, 1, 0, 0);
+      skinWeights.push(weightUpper, weightLower, 0, 0);
     }
 
     geometry.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(skinIndices, 4));
@@ -76,7 +103,7 @@ export function BendableMinecraftCharacter({ skinImage, pose }: MinecraftCharact
   // Create limb systems
   const limbSystems = useMemo(() => ({
     leftArm: createLimbSystem(),
-    rightArm: createLimbSystem(), 
+    rightArm: createLimbSystem(),
     leftLeg: createLimbSystem(),
     rightLeg: createLimbSystem(),
   }), [createLimbSystem]);
@@ -89,12 +116,12 @@ export function BendableMinecraftCharacter({ skinImage, pose }: MinecraftCharact
 
   // Materials
   const headMaterials = useMemo(() => [
-    createMaterial(8, 8, 8, 8),   
-    createMaterial(16, 8, 8, 8),  
-    createMaterial(8, 0, 8, 8),   
-    createMaterial(16, 0, 8, 8),  
-    createMaterial(8, 8, 8, 8),   
-    createMaterial(24, 8, 8, 8),  
+    createMaterial(8, 8, 8, 8),
+    createMaterial(16, 8, 8, 8),
+    createMaterial(8, 0, 8, 8),
+    createMaterial(16, 0, 8, 8),
+    createMaterial(8, 8, 8, 8),
+    createMaterial(24, 8, 8, 8),
   ], [createMaterial]);
 
   const bodyMaterials = useMemo(() => [
@@ -126,82 +153,101 @@ export function BendableMinecraftCharacter({ skinImage, pose }: MinecraftCharact
 
   // Create skinned meshes
   const meshes = useMemo(() => {
-    const leftArmMesh = new THREE.SkinnedMesh(limbSystems.leftArm.geometry, armMaterials);
-    leftArmMesh.add(limbSystems.leftArm.upperBone);
-    leftArmMesh.bind(new THREE.Skeleton([limbSystems.leftArm.upperBone, limbSystems.leftArm.lowerBone]));
+    const createSkinnedLimb = (geom: THREE.BoxGeometry, mats: THREE.Material[], system: any) => {
+      const mesh = new THREE.SkinnedMesh(geom, mats);
+      mesh.frustumCulled = false; // Prevent culling issues with animation
+      mesh.add(system.upperBone);
+      mesh.bind(new THREE.Skeleton([system.upperBone, system.lowerBone]));
+      return mesh;
+    };
 
-    const rightArmMesh = new THREE.SkinnedMesh(limbSystems.rightArm.geometry, armMaterials);  
-    rightArmMesh.add(limbSystems.rightArm.upperBone);
-    rightArmMesh.bind(new THREE.Skeleton([limbSystems.rightArm.upperBone, limbSystems.rightArm.lowerBone]));
-
-    const leftLegMesh = new THREE.SkinnedMesh(limbSystems.leftLeg.geometry, legMaterials);
-    leftLegMesh.add(limbSystems.leftLeg.upperBone);
-    leftLegMesh.bind(new THREE.Skeleton([limbSystems.leftLeg.upperBone, limbSystems.leftLeg.lowerBone]));
-
-    const rightLegMesh = new THREE.SkinnedMesh(limbSystems.rightLeg.geometry, legMaterials);
-    rightLegMesh.add(limbSystems.rightLeg.upperBone);
-    rightLegMesh.bind(new THREE.Skeleton([limbSystems.rightLeg.upperBone, limbSystems.rightLeg.lowerBone]));
-
-    return { leftArmMesh, rightArmMesh, leftLegMesh, rightLegMesh };
+    return {
+      leftArmMesh: createSkinnedLimb(limbSystems.leftArm.geometry, armMaterials, limbSystems.leftArm),
+      rightArmMesh: createSkinnedLimb(limbSystems.rightArm.geometry, armMaterials, limbSystems.rightArm),
+      leftLegMesh: createSkinnedLimb(limbSystems.leftLeg.geometry, legMaterials, limbSystems.leftLeg),
+      rightLegMesh: createSkinnedLimb(limbSystems.rightLeg.geometry, legMaterials, limbSystems.rightLeg),
+    };
   }, [limbSystems, armMaterials, legMaterials]);
 
-  // Apply pose
+  // Apply pose mapping PRESET -> BONES
   useEffect(() => {
     const deg2rad = (deg: number) => (deg * Math.PI) / 180;
 
-    // Static bones
     staticBones.head.rotation.set(deg2rad(pose.head.x), deg2rad(pose.head.y), deg2rad(pose.head.z));
     staticBones.body.rotation.set(deg2rad(pose.body.x), deg2rad(pose.body.y), deg2rad(pose.body.z));
-    
-    // Limbs
-    limbSystems.leftArm.upperBone.rotation.set(
-      deg2rad(pose.leftArm.position.x), 
-      deg2rad(pose.leftArm.position.y), 
-      deg2rad(pose.leftArm.position.z)
-    );
-    limbSystems.leftArm.lowerBone.rotation.set(deg2rad(pose.leftArm.bend), 0, 0);
-    
-    limbSystems.rightArm.upperBone.rotation.set(
-      deg2rad(pose.rightArm.position.x), 
-      deg2rad(pose.rightArm.position.y), 
-      deg2rad(pose.rightArm.position.z)
-    );
-    limbSystems.rightArm.lowerBone.rotation.set(deg2rad(pose.rightArm.bend), 0, 0);
-    
-    limbSystems.leftLeg.upperBone.rotation.set(
-      deg2rad(pose.leftLeg.position.x), 
-      deg2rad(pose.leftLeg.position.y), 
-      deg2rad(pose.leftLeg.position.z)
-    );
-    limbSystems.leftLeg.lowerBone.rotation.set(deg2rad(pose.leftLeg.bend), 0, 0);
-    
-    limbSystems.rightLeg.upperBone.rotation.set(
-      deg2rad(pose.rightLeg.position.x), 
-      deg2rad(pose.rightLeg.position.y), 
-      deg2rad(pose.rightLeg.position.z)
-    );
-    limbSystems.rightLeg.lowerBone.rotation.set(deg2rad(pose.rightLeg.bend), 0, 0);
+
+    // Arms mapping: Upper part to upperBone, Lower part'S X rotation to lowerBone (Bending)
+    limbSystems.leftArm.upperBone.rotation.set(deg2rad(pose.leftUpperArm.x), deg2rad(pose.leftUpperArm.y), deg2rad(pose.leftUpperArm.z));
+    limbSystems.leftArm.lowerBone.rotation.set(deg2rad(pose.leftLowerArm.x), 0, 0);
+
+    limbSystems.rightArm.upperBone.rotation.set(deg2rad(pose.rightUpperArm.x), deg2rad(pose.rightUpperArm.y), deg2rad(pose.rightUpperArm.z));
+    limbSystems.rightArm.lowerBone.rotation.set(deg2rad(pose.rightLowerArm.x), 0, 0);
+
+    // Legs mapping
+    limbSystems.leftLeg.upperBone.rotation.set(deg2rad(pose.leftUpperLeg.x), deg2rad(pose.leftUpperLeg.y), deg2rad(pose.leftUpperLeg.z));
+    limbSystems.leftLeg.lowerBone.rotation.set(deg2rad(pose.leftLowerLeg.x), 0, 0);
+
+    limbSystems.rightLeg.upperBone.rotation.set(deg2rad(pose.rightUpperLeg.x), deg2rad(pose.rightUpperLeg.y), deg2rad(pose.rightUpperLeg.z));
+    limbSystems.rightLeg.lowerBone.rotation.set(deg2rad(pose.rightLowerLeg.x), 0, 0);
   }, [pose, staticBones, limbSystems]);
+
+  // Facial materials
+  const eyeMaterial = useMemo(() => createSubTextureMaterial(8, 12, 8, 2), [createSubTextureMaterial]);
+  const mouthMaterial = useMemo(() => createSubTextureMaterial(8, 14, 8, 2), [createSubTextureMaterial]);
 
   return (
     <group ref={groupRef} position={[0, -1, 0]} scale={0.125}>
       {/* Head - with bone for rotation */}
-      <group position={[0, 28, 0]}>
-        <primitive object={staticBones.head} />
-        <mesh geometry={new THREE.BoxGeometry(8, 8, 8)} material={headMaterials} />
-      </group>
+      <primitive object={staticBones.head} position={[0, 24, 0]}>
+        <mesh
+          geometry={new THREE.BoxGeometry(8, 8, 8)}
+          material={headMaterials}
+          position={[0, 4, 0]} // Position mesh so pivot is at bottom
+        />
+
+        {/* Facial Features (Secondary Planes) */}
+        <group position={[0, 4, 0]}>
+          {/* Eyes with logic for facial props */}
+          <mesh position={[
+            (facial?.eyes?.x || 0) * 0.1,
+            (facial?.eyes?.y || 0) * 0.1,
+            4.01
+          ]}>
+            <planeGeometry args={[8, 2]} />
+            <primitive object={eyeMaterial} attach="material" />
+          </mesh>
+
+          {/* Mouth */}
+          <mesh position={[0, -2 - (facial?.mouth?.smile || 0) * 0.1, 4.01]}>
+            <planeGeometry args={[8, 2]} />
+            <primitive object={mouthMaterial} attach="material" />
+          </mesh>
+        </group>
+      </primitive>
 
       {/* Body - with bone for rotation */}
-      <group position={[0, 18, 0]}>
-        <primitive object={staticBones.body} />
-        <mesh geometry={new THREE.BoxGeometry(8, 12, 4)} material={bodyMaterials} />
-      </group>
+      <primitive object={staticBones.body} position={[0, 18, 0]}>
+        <mesh
+          geometry={new THREE.BoxGeometry(8, 12, 4)}
+          material={bodyMaterials}
+          position={[0, 6, 0]} // Pivot at bottom 
+        />
+      </primitive>
 
-      {/* Limbs - skinned meshes */}
-      <primitive object={meshes.leftArmMesh} position={[-6, 22, 0]} />
-      <primitive object={meshes.rightArmMesh} position={[6, 22, 0]} />
-      <primitive object={meshes.leftLegMesh} position={[-2, 12, 0]} />
-      <primitive object={meshes.rightLegMesh} position={[2, 12, 0]} />
+      {/* Limbs - skinned meshes wrapped in groups for stability */}
+      <group position={[-6, 22, 0]}>
+        <primitive object={meshes.leftArmMesh} />
+      </group>
+      <group position={[6, 22, 0]}>
+        <primitive object={meshes.rightArmMesh} />
+      </group>
+      <group position={[-2, 12, 0]}>
+        <primitive object={meshes.leftLegMesh} />
+      </group>
+      <group position={[2, 12, 0]}>
+        <primitive object={meshes.rightLegMesh} />
+      </group>
     </group>
   );
 }
+

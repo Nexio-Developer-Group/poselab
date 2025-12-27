@@ -12,15 +12,15 @@ export const ModelUpload = ({ onModelUpload }: ModelUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelect = (file: File) => {
-    const validExtensions = [".glb", ".gltf"];
+    const validModelExtensions = [".glb", ".gltf"];
+    const validImageExtensions = [".png", ".jpg", ".jpeg"];
     const fileName = file.name.toLowerCase();
 
-    const hasValidExtension = validExtensions.some((ext) =>
-      fileName.endsWith(ext)
-    );
+    const isModel = validModelExtensions.some((ext) => fileName.endsWith(ext));
+    const isImage = validImageExtensions.some((ext) => fileName.endsWith(ext));
 
-    if (!hasValidExtension) {
-      toast.error("Invalid file type. Please upload a .glb or .gltf file.");
+    if (!isModel && !isImage) {
+      toast.error("Invalid file type. Please upload a .glb, .gltf, or a Minecraft skin (.png/.jpg).");
       return;
     }
 
@@ -34,7 +34,7 @@ export const ModelUpload = ({ onModelUpload }: ModelUploadProps) => {
 
     const url = URL.createObjectURL(file);
     onModelUpload(file, url);
-    toast.success("Model loaded successfully!");
+    toast.success(isImage ? "Skin loaded successfully!" : "Model loaded successfully!");
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -74,11 +74,10 @@ export const ModelUpload = ({ onModelUpload }: ModelUploadProps) => {
 
           {/* Upload Area */}
           <div
-            className={`border-2 border-dashed rounded-xl p-8 sm:p-12 transition-all cursor-pointer ${
-              isDragging
+            className={`border-2 border-dashed rounded-xl p-8 sm:p-12 transition-all cursor-pointer ${isDragging
                 ? "border-primary bg-primary/10 scale-105"
                 : "border-border hover:border-primary/50 hover:bg-accent/5"
-            }`}
+              }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}

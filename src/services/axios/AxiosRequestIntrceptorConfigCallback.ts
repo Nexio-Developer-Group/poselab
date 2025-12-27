@@ -5,27 +5,32 @@ import {
     TOKEN_NAME_IN_STORAGE,
 } from '@/constants/api.constant'
 import type { InternalAxiosRequestConfig } from 'axios'
+import cookiesStorage from '@/utils/cookiesStorage'
 
 const AxiosRequestIntrceptorConfigCallback = (
     config: InternalAxiosRequestConfig,
 ) => {
     const storage = appConfig.accessTokenPersistStrategy
+    let accessToken = ''
 
-    if (storage === 'localStorage' || storage === 'sessionStorage') {
-        let accessToken = ''
+    // Try primary storage first
+    if (storage === 'localStorage') {
+        accessToken = localStorage.getItem(TOKEN_NAME_IN_STORAGE) || ''
+    } else if (storage === 'sessionStorage') {
+        accessToken = sessionStorage.getItem(TOKEN_NAME_IN_STORAGE) || ''
+    } else if (storage === 'cookies') {
+        accessToken = (cookiesStorage.getItem(TOKEN_NAME_IN_STORAGE) as string) || ''
+    }
 
-        if (storage === 'localStorage') {
-            accessToken = localStorage.getItem(TOKEN_NAME_IN_STORAGE) || ''
-        }
+    // Fallback to any available storage if primary is empty
+    if (!accessToken) {
+        accessToken = localStorage.getItem(TOKEN_NAME_IN_STORAGE) ||
+            sessionStorage.getItem(TOKEN_NAME_IN_STORAGE) ||
+            (cookiesStorage.getItem(TOKEN_NAME_IN_STORAGE) as string) || ''
+    }
 
-        if (storage === 'sessionStorage') {
-            accessToken = sessionStorage.getItem(TOKEN_NAME_IN_STORAGE) || ''
-        }
-
-        if (accessToken) {
-            config.headers[REQUEST_HEADER_AUTH_KEY] =
-                `${TOKEN_TYPE}${accessToken}`
-        }
+    if (accessToken) {
+        config.headers[REQUEST_HEADER_AUTH_KEY] = `${TOKEN_TYPE}${accessToken}`
     }
 
     return config

@@ -27,6 +27,7 @@ export type ApiSignInResponse = {
 export type ApiSignUpResponse = {
     status: number
     success: boolean
+    Token: string
     User: {
         uid: string
         email: string

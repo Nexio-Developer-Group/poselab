@@ -10,25 +10,31 @@
 @layer theme {
   :root {
     --neutral: #ffffff;
-    --primary: #113e21;         /* strong vibrant green */
+    --primary: #113e21;
+    /* strong vibrant green */
     --primary-text: #121212;
     --primary-deep: #073417;
     --primary-mild: #1ED760BF;
     --primary-subtle: #1ED7601A;
 
-    --secondary: #3B82F6;       /* vivid blue */
+    --secondary: #3B82F6;
+    /* vivid blue */
     --secondary-deep: #2563EB;
 
-    --error: #EF4444;           /* bold red */
+    --error: #EF4444;
+    /* bold red */
     --error-subtle: #F871711A;
 
-    --success: #10B981;         /* solid green */
+    --success: #10B981;
+    /* solid green */
     --success-subtle: #6EE7B71A;
 
-    --info: #0EA5E9;            /* bright info blue */
+    --info: #0EA5E9;
+    /* bright info blue */
     --info-subtle: #38BDF81A;
 
-    --warning: #FBBF24;         /* strong yellow */
+    --warning: #FBBF24;
+    /* strong yellow */
     --warning-subtle: #FCD34D45;
 
     --gray-50: #F9FAFB;
@@ -46,13 +52,15 @@
 
   .dark {
     --neutral: #ffffff;
-    --primary: #22C55E;         /* dark mode primary green */
+    --primary: #22C55E;
+    /* dark mode primary green */
     --primary-text: #ffffff;
     --primary-deep: #16A34A;
     --primary-mild: #22C55EBF;
-    --primary-subtle: #22C55E1A;
+    --primary-subtle: #22c55e14;
 
-    --secondary: #3B82F6;       /* same vivid blue */
+    --secondary: #3B82F6;
+    /* same vivid blue */
     --secondary-deep: #1D4ED8;
 
     --error: #EF4444;
@@ -76,12 +84,13 @@
     --gray-600: #4B5563;
     --gray-700: #374151;
     --gray-800: #1F2937;
-    --gray-900: #111827;
-    --gray-950: #030712;
+    --gray-900: #0a0a0c;
+    --gray-950: #050505;
   }
 }
 
 @layer base {
+
   *,
   ::after,
   ::before,
@@ -90,23 +99,49 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
-  button, [role=button] {
+  button,
+  [role=button] {
     cursor: pointer;
   }
 
   body {
-    @apply text-gray-500 dark:text-gray-400 text-sm !bg-gray-100 dark:bg-gray-950 leading-normal font-medium;
+    @apply text-gray-500 dark:text-gray-400 text-sm bg-gray-50 dark:bg-gray-950 leading-normal font-medium;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, .h1 { @apply text-4xl font-bold text-gray-900 dark:text-gray-100; }
-  h2, .h2 { @apply text-3xl font-bold text-gray-900 dark:text-gray-100; }
-  h3, .h3 { @apply text-2xl font-bold text-gray-900 dark:text-gray-100; }
-  h4, .h4 { @apply text-xl font-bold text-gray-900 dark:text-gray-100; }
-  h5, .h5 { @apply text-lg font-bold text-gray-900 dark:text-gray-100; }
-  h6, .h6 { @apply text-base font-semibold text-gray-900 dark:text-gray-100; }
+  h1,
+  .h1 {
+    @apply text-4xl font-bold text-gray-900 dark:text-gray-100;
+  }
 
-  hr { @apply border-gray-200 dark:border-gray-600; }
+  h2,
+  .h2 {
+    @apply text-3xl font-bold text-gray-900 dark:text-gray-100;
+  }
+
+  h3,
+  .h3 {
+    @apply text-2xl font-bold text-gray-900 dark:text-gray-100;
+  }
+
+  h4,
+  .h4 {
+    @apply text-xl font-bold text-gray-900 dark:text-gray-100;
+  }
+
+  h5,
+  .h5 {
+    @apply text-lg font-bold text-gray-900 dark:text-gray-100;
+  }
+
+  h6,
+  .h6 {
+    @apply text-base font-semibold text-gray-900 dark:text-gray-100;
+  }
+
+  hr {
+    @apply border-gray-200 dark:border-gray-600;
+  }
 }
 
 @layer components {

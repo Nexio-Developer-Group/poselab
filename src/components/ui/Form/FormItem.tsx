@@ -12,7 +12,7 @@ export interface FormItemProps extends CommonProps {
     extra?: string | ReactNode
     htmlFor?: string
     invalid?: boolean
-    label?: string
+    label?: string | ReactNode
     labelClass?: string
     labelWidth?: string | number
     layout?: TypeAttributes.FormLayout
@@ -49,16 +49,14 @@ const FormItem = (props: FormItemProps) => {
         switch (formItemLayout) {
             case LAYOUT.HORIZONTAL:
                 return label
-                    ? `${CONTROL_SIZES[formItemLabelHeight].h} ${
-                          label && 'ltr:pr-2 rtl:pl-2'
-                      }`
+                    ? `${CONTROL_SIZES[formItemLabelHeight].h} ${label && 'ltr:pr-2 rtl:pl-2'
+                    }`
                     : 'ltr:pr-2 rtl:pl-2'
             case LAYOUT.VERTICAL:
                 return `mb-2`
             case LAYOUT.INLINE:
-                return `${CONTROL_SIZES[formItemLabelHeight].h} ${
-                    label && 'ltr:pr-2 rtl:pl-2'
-                }`
+                return `${CONTROL_SIZES[formItemLabelHeight].h} ${label && 'ltr:pr-2 rtl:pl-2'
+                    }`
             default:
                 return ''
         }

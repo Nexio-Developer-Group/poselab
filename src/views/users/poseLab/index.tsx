@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CharacterViewer } from "@/views/users/LabUtils/CharacterViewer";
+import CharacterViewer from "@/views/users/LabUtils/CharacterViewer";
 import { SkinUpload } from "./components/SkinUpload";
 
 const Index = () => {

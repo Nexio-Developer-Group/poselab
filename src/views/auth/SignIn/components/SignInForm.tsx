@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { FormItem, Form } from '@/components/ui/Form'
 import PasswordInput from '@/components/shared/PasswordInput'
 import classNames from '@/utils/classNames'
+import { cn } from "@/lib/utils"
 import { useAuth } from '@/auth'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -126,27 +127,38 @@ const SignInForm = (props: SignInFormProps) => {
     }
 
     return (
-        <div className={className}>
-            <div className="flex w-full border-b border-gray-200 mb-6">
+        <div className={cn(className, "animate-in fade-in slide-in-from-bottom-4 duration-700")}>
+            {/* Custom Premium Tabs */}
+            <div className="flex p-1.5 bg-white/5 border border-white/5 rounded-2xl mb-8">
                 <button
-                    className={`flex-1 pb-2 text-sm font-medium ${authMethod === 'email' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold tracking-widest uppercase transition-all duration-300 rounded-xl rounded-r-none",
+                        authMethod === 'email'
+                            ? "bg-primary text-black shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                            : "text-gray-100 hover:text-gray-100"
+                    )}
                     onClick={() => setAuthMethod('email')}
                 >
-                    Email
+                    Email Access
                 </button>
                 <button
-                    className={`flex-1 pb-2 text-sm font-medium ${authMethod === 'phone' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-3 text-xs font-bold tracking-widest uppercase transition-all duration-300 rounded-xl rounded-l-none",
+                        authMethod === 'phone'
+                            ? "bg-primary text-black shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                            : "text-gray-100 hover:text-gray-100"
+                    )}
                     onClick={() => setAuthMethod('phone')}
                 >
-                    Phone
+                    Secure SMS
                 </button>
             </div>
 
-            <div className="mt-4">
+            <div className="space-y-6">
                 {authMethod === 'email' ? (
                     <Form onSubmit={handleSubmit(onSignIn)}>
                         <FormItem
-                            label="Email"
+                            label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Email Address</span>}
                             invalid={Boolean(errors.email)}
                             errorMessage={errors.email?.message}
                         >
@@ -156,7 +168,8 @@ const SignInForm = (props: SignInFormProps) => {
                                 render={({ field }) => (
                                     <Input
                                         type="email"
-                                        placeholder="Email"
+                                        className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium pr-10"
+                                        placeholder="commander@poselab.gg"
                                         autoComplete="off"
                                         {...field}
                                     />
@@ -164,12 +177,11 @@ const SignInForm = (props: SignInFormProps) => {
                             />
                         </FormItem>
                         <FormItem
-                            label="Password"
+                            label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Secret Password</span>}
                             invalid={Boolean(errors.password)}
                             errorMessage={errors.password?.message}
                             className={classNames(
                                 passwordHint ? 'mb-0' : '',
-                                errors.password?.message ? 'mb-8' : '',
                             )}
                         >
                             <Controller
@@ -178,52 +190,77 @@ const SignInForm = (props: SignInFormProps) => {
                                 rules={{ required: true }}
                                 render={({ field }) => (
                                     <PasswordInput
-                                        placeholder="Password"
+                                        placeholder="••••••••"
                                         {...field}
                                     />
                                 )}
                             />
                         </FormItem>
-                        {passwordHint}
+                        <div className="flex justify-start">
+                            {passwordHint}
+                        </div>
                         <Button
                             variant="default"
                             type="submit"
-                            className='w-full'
+                            className="w-full h-12 bg-primary hover:bg-primary text-black font-bold rounded-xl shadow-xl shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200 mt-4"
                             disabled={isSubmitting}
                         >
-                            {isSubmitting ? 'Signing in...' : 'Sign In'}
+                            {isSubmitting ? 'AUTHORIZING...' : 'SIGN IN TO STUDIO'}
                         </Button>
                     </Form>
                 ) : (
-                    <div>
+                    <div className="space-y-6">
                         {!confirmationResult ? (
-                            <div className="flex flex-col gap-4">
-                                <FormItem label="Phone Number" invalid={!!phoneError} errorMessage={phoneError}>
+                            <div className="flex flex-col gap-6">
+                                <FormItem
+                                    label={<span className="text-gray-100 text-[10px] font-bold tracking-widest uppercase">Phone </span>}
+                                    invalid={!!phoneError}
+                                    errorMessage={phoneError}
+                                >
                                     <Input
-                                        placeholder="Enter phone number (e.g. 9876543210)"
+                                        placeholder="10-digit phone number"
+                                        className="h-12 bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-gray-100 placeholder:text-gray-300/60 transition-all font-medium"
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
                                     />
                                 </FormItem>
-                                <div id="recaptcha-container"></div>
-                                <Button className="w-full" onClick={onSendOtp} disabled={isSubmitting}>
-                                    {isSubmitting ? 'Sending...' : 'Send OTP'}
+                                <div id="recaptcha-container" className="hidden"></div>
+                                <Button
+                                    className="w-full h-12 bg-primary hover:bg-primary text-black font-bold rounded-xl shadow-xl shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200"
+                                    onClick={onSendOtp}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'TRANSMITTING OTP...' : 'SEND SECURE OTP'}
                                 </Button>
+                                <p className="text-[10px] text-gray-200 text-center uppercase tracking-wider font-medium leading-relaxed">
+                                    A 6-digit verification code will be sent <br /> to your device via SMS.
+                                </p>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-4">
-                                <FormItem label="Enter OTP">
+                            <div className="flex flex-col gap-6">
+                                <FormItem label={<span className="text-gray-400 text-[10px] font-bold tracking-widest uppercase">Verification Code</span>}>
                                     <Input
-                                        placeholder="123456"
+                                        className="h-14 text-center text-3xl font-black tracking-[0.5em] bg-white/5 border-white/10 rounded-xl focus:border-primary/50 text-primary placeholder:text-gray-800 transition-all"
+                                        placeholder="000000"
+                                        maxLength={6}
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value)}
                                     />
                                 </FormItem>
-                                <Button className="w-full" onClick={onVerifyOtp} disabled={isSubmitting}>
-                                    {isSubmitting ? 'Verifying...' : 'Verify OTP & Sign In'}
+                                <Button
+                                    className="w-full h-12 bg-primary hover:bg-primary text-black font-bold rounded-xl shadow-xl shadow-primary/10 transition-all hover:scale-[1.02] active:scale-95 duration-200"
+                                    onClick={onVerifyOtp}
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'VERIFYING...' : 'COMPLETE AUTHORIZATION'}
                                 </Button>
-                                <Button variant="ghost" size="sm" className="w-full" onClick={() => setConfirmationResult(null)}>
-                                    Change Phone Number
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full text-xs text-gray-500 hover:text-white hover:bg-white/5 h-10 rounded-xl font-bold tracking-widest uppercase"
+                                    onClick={() => setConfirmationResult(null)}
+                                >
+                                    Change Phone
                                 </Button>
                             </div>
                         )}

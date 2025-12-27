@@ -17,13 +17,6 @@ type OauthSignInProps = {
 
 const OauthSignIn = ({ setMessage, disableSubmit }: OauthSignInProps) => {
     const { oAuthSignIn } = useAuth()
-    const [showPhoneForm, setShowPhoneForm] = useState(false)
-    const [phoneStep, setPhoneStep] = useState<'phone' | 'otp'>('phone')
-    const [phoneNumber, setPhoneNumber] = useState('')
-    const [otp, setOtp] = useState('')
-    const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
-    const [otpSentMessage, setOtpSentMessage] = useState('')
-
 
     const handleGoogleSignIn = async () => {
         if (!disableSubmit) {
@@ -59,40 +52,39 @@ const OauthSignIn = ({ setMessage, disableSubmit }: OauthSignInProps) => {
         }
     }
 
-
-
     return (
-        <div>
-            <div className="flex items-center gap-2">
-                <Button
-                    className="flex-1 bg-white text-black border shadow-none hover:shadow-sm transition-all border-gray-300 hover:bg-white hover:text-black"
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                >
-                    <div className="flex items-center justify-center gap-2">
-                        <img
-                            className="h-[25px] w-[25px]"
-                            src="/img/others/google.png"
-                            alt="Google sign in"
-                        />
-                        <span>Google</span>
-                    </div>
-                </Button>
-                <Button
-                    className="flex-1 bg-white text-black shadow-none hover:shadow-sm transition-all border border-gray-300 hover:bg-white hover:text-black"
-                    type="button"
-                    onClick={handleGithubSignIn}
-                >
-                    <div className="flex items-center justify-center gap-2">
-                        <img
-                            className="h-[25px] w-[25px]"
-                            src="/img/others/github.png"
-                            alt="GitHub sign in"
-                        />
-                        <span>GitHub</span>
-                    </div>
-                </Button>
-            </div>
+        <div className="flex gap-4">
+            <Button
+                className="w-full h-12 bg-white/5 border border-white/10 text-gray-100 hover:bg-white/10 hover:border-white/20 shadow-xl transition-all duration-300 rounded-xl px-2 flex items-center justify-center gap-3 group"
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={disableSubmit}
+            >
+                <div className="bg-white p-1 rounded-full transition-transform group-hover:scale-110 duration-300">
+                    <img
+                        className="h-5 w-5"
+                        src="/img/others/google.png"
+                        alt="Google"
+                    />
+                </div>
+                <span className="font-bold tracking-tight">Google</span>
+            </Button>
+
+            <Button
+                className="w-full h-12 bg-white/5 border border-white/10 text-gray-100 hover:bg-white/10 hover:border-white/20 shadow-xl transition-all duration-300 rounded-xl px-2 flex items-center justify-center gap-3 group"
+                type="button"
+                onClick={handleGithubSignIn}
+                disabled={disableSubmit}
+            >
+                <div className="bg-gray-900 p-1 rounded-full border border-white/10 transition-transform group-hover:scale-110 duration-300">
+                    <img
+                        className="h-5 w-5 invert"
+                        src="/img/others/github.png"
+                        alt="GitHub"
+                    />
+                </div>
+                <span className="font-bold tracking-tight">GitHub</span>
+            </Button>
         </div>
     )
 }
