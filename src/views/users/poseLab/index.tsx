@@ -33,7 +33,7 @@ const Index = () => {
   if (!skinData) return null;
 
   return (
-    <div className="relative h-[77vh] w-fullflex flex-col items-center justify-center">
+    <div className="relative h-[92.2vh] w-full flex flex-col items-center justify-center">
       {/* Character Viewer */}
       <CharacterViewer
         skinImage={skinData.image}

@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment } from "@react-three/drei";
+import { OrbitControls, Environment, GizmoHelper, GizmoViewport, Stats } from "@react-three/drei";
 import { MinecraftCharacter } from "./MinecraftCharacter";
 import { PoseControls } from "./PoseControls";
 import { LightingControls, Light } from "./LightingControls";
@@ -8,97 +8,31 @@ import { LightRenderer } from "./LightRenderer";
 import { RenderDialog, RenderSettings } from "./RenderDialog";
 import { createHighQualityRender } from "./renderUtils";
 import { Button } from "@/components/ui/Button";
-import { Camera, Upload, Download, RotateCcw, Sun, Armchair, SlidersHorizontal } from "lucide-react";
+import { Camera, Upload, Download, RotateCcw, SlidersHorizontal, Lightbulb, SplinePointer, Gpu } from "lucide-react";
 import { toast } from "sonner";
 import * as THREE from "three";
+import { QualitySetting } from "./QualitySetting";
+import { getQualityPreset } from "./qualitySettings";
+import { useDeviceQuality } from "./hooks/useDeviceQuality";
+import { enhanceSceneMaterials } from "./pbrMaterials";
+import PRESET_POSES from "./posePreset";
+// import {BendableMinecraftCharacter} from "./BendableMinecraftCharacter";
 
-// --- Your PRESET_POSES stays same here ---
 
-const PRESET_POSES = {
-  standing: {
-    leftUpperArm: { x: 0, y: 0, z: 0 },
-    leftLowerArm: { x: 0, y: 0, z: 0 },
-    rightUpperArm: { x: 0, y: 0, z: 0 },
-    rightLowerArm: { x: 0, y: 0, z: 0 },
-    leftUpperLeg: { x: 0, y: 0, z: 0 },
-    leftLowerLeg: { x: 0, y: 0, z: 0 },
-    rightUpperLeg: { x: 0, y: 0, z: 0 },
-    rightLowerLeg: { x: 0, y: 0, z: 0 },
-    head: { x: 0, y: 0, z: 0 },
-    body: { x: 0, y: 0, z: 0 },
-  },
-  walking: {
-    leftUpperArm: { x: -20, y: 0, z: -5 },
-    leftLowerArm: { x: -5, y: 0, z: 5 },
-    rightUpperArm: { x: 20, y: 0, z: 5 },
-    rightLowerArm: { x: 0, y: 0, z: 0 },
-    leftUpperLeg: { x: 25, y: 0, z: -3 },
-    leftLowerLeg: { x: 0, y: 0, z: 0 },
-    rightUpperLeg: { x: -25, y: 0, z: 5 },
-    rightLowerLeg: { x: 0, y: 0, z: 0 },
-    head: { x: 0, y: 2, z: 5 },
-    body: { x: 0, y: 0, z: 0 },
-  },
-  waving: {
-    leftUpperArm: { x: 0, y: 0, z: 0 },
-    leftLowerArm: { x: 0, y: 0, z: 0 },
-    rightUpperArm: { x: -80, y: 0, z: 30 },
-    rightLowerArm: { x: -45, y: 0, z: 15 },
-    leftUpperLeg: { x: 0, y: 0, z: 0 },
-    leftLowerLeg: { x: 0, y: 0, z: 0 },
-    rightUpperLeg: { x: 0, y: 0, z: 0 },
-    rightLowerLeg: { x: 0, y: 0, z: 0 },
-    head: { x: 0, y: 15, z: 0 },
-    body: { x: 0, y: 0, z: 0 },
-  },
-  sitting: {
-    leftUpperArm: { x: 0, y: 0, z: 0 },
-    leftLowerArm: { x: -30, y: 0, z: 0 },
-    rightUpperArm: { x: 0, y: 0, z: 0 },
-    rightLowerArm: { x: -30, y: 0, z: 0 },
-    leftUpperLeg: { x: -45, y: 0, z: 0 },
-    leftLowerLeg: { x: 45, y: 0, z: 0},
-    rightUpperLeg: { x: -45, y: 0, z: 0 },
-    rightLowerLeg: { x: 45, y: 0, z: 0 },
-    head: { x: 0, y: 0, z: 0 },
-    body: { x: 0, y: 0, z: 0 },
-  },
-  running: {
-    leftUpperArm: { x: -45, y: 0, z: 0 },
-    leftLowerArm: { x: 0, y: 0, z: 0 },
-    rightUpperArm: { x: 45, y: 0, z: 0 },
-    rightLowerArm: { x: 0, y: 0, z: 0 },
-    leftUpperLeg: { x: 45, y: 0, z: 0 },
-    leftLowerLeg: { x: 0, y: 0, z: 0 },
-    rightUpperLeg: { x: -45, y: 0, z: 0 },
-    rightLowerLeg: { x: 0, y: 0, z: 0 },
-    head: { x: 5, y: 0, z: 0 },
-    body: { x: 5, y: 0, z: 0 },
-  },
-  // sample change
-  combat: {
-    leftUpperArm: { x: -45, y: 30, z: 0 },
-    leftLowerArm: { x: -90, y: 0, z: 0 },
-    rightUpperArm: { x: -30, y: -45, z: 15 },
-    rightLowerArm: { x: -60, y: 0, z: 0 },
-    leftUpperLeg: { x: 15, y: 0, z: 0 },
-    leftLowerLeg: { x: 0, y: 0, z: 0 },
-    rightUpperLeg: { x: -15, y: 0, z: 0 },
-    rightLowerLeg: { x: 0, y: 0, z: 0 },
-    head: { x: 0, y: -15, z: 0 },
-    body: { x: 0, y: -10, z: 0 },
-  },
-};
 
 export interface CharacterViewerProps {
   skinImage: HTMLImageElement;
   onChangeSkinClick: (el: HTMLElement) => void;
+  pose?: typeof PRESET_POSES[keyof typeof PRESET_POSES]; // optional input pose
 }
 
+export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: CharacterViewerProps) => {
+  // ✅ if pose not passed, fallback to standing
+  const [currentPose, setCurrentPose] = useState(pose || PRESET_POSES.standing);
+  const [selectedPreset, setSelectedPreset] = useState(
+    Object.keys(PRESET_POSES).find((key) => PRESET_POSES[key as keyof typeof PRESET_POSES] === pose) || "standing"
+  );
 
-export const CharacterViewer = ({ skinImage, onChangeSkinClick }: CharacterViewerProps) => {
-  const [currentPose, setCurrentPose] = useState(PRESET_POSES.standing);
-  const [selectedPreset, setSelectedPreset] = useState("standing");
   const [openPanel, setOpenPanel] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
@@ -109,13 +43,27 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick }: CharacterViewe
     { id: "light-2", type: "directional", position: [-10, 5, -5], color: "#fffff", intensity: 0.3 },
   ]);
 
-  // --- existing handlers same ---
+  // --- Quality system ---
+  const deviceQuality = useDeviceQuality();
+  const qualityPreset = getQualityPreset(deviceQuality.quality);
+
+  useEffect(() => {
+    if (scene) enhanceSceneMaterials(scene, undefined, qualityPreset);
+  }, [scene, qualityPreset]);
+
+  // --- Pose handling ---
   const handlePoseChange = (bodyPart: string, axis: string, value: number) => {
     setCurrentPose((prev) => ({
       ...prev,
-      [bodyPart]: { ...prev[bodyPart as keyof typeof prev], [axis]: value },
+      poseConfig: {
+        ...prev.poseConfig,
+        [bodyPart]: {
+          ...prev.poseConfig[bodyPart as keyof typeof prev.poseConfig],
+          [axis]: value,
+        },
+      },
     }));
-    setSelectedPreset("standing");
+    setSelectedPreset("custom");
   };
 
   const handlePresetChange = (preset: string) => {
@@ -144,11 +92,10 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick }: CharacterViewe
     return await createHighQualityRender(scene, camera, settings, onProgress);
   };
 
+  // --- JSX ---
   return (
-    <div className="relative w-full h-full bg-white border border-gray-300 flex overflow-hidden">
-      {/* ---- Main Canvas ---- */}
+    <div className="relative w-full h-full bg-white flex overflow-hidden">
       <div className="flex-1 relative">
-
         {/* Top Header */}
         <div className="absolute z-20 flex justify-between items-center bg-white rounded-br-xl backdrop-blur-sm p-3">
           <div className="flex gap-2">
@@ -164,21 +111,28 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick }: CharacterViewe
           </div>
         </div>
 
-        {/* ---- Right Vertical Tabs ---- */}
-        <div className="absolute flex flex-col right-0 items-center border-l z-50 border-gray-400 rounded-bl-xl bg-white w-14 p-2 space-y-4">
+        {/* Right Tool Buttons */}
+        <div className="absolute flex flex-col items-center top-16 z-10 border-gray-400 rounded-br-xl rounded-tr-xl bg-white w-14 p-2 space-y-4">
+          <Button
+            variant={openPanel === "quality" ? "default" : "ghost"}
+            size="icon"
+            onClick={() => setOpenPanel(openPanel === "quality" ? null : "quality")}
+          >
+            <Gpu className="w-4 h-4" />
+          </Button>
           <Button
             variant={openPanel === "lighting" ? "default" : "ghost"}
             size="icon"
             onClick={() => setOpenPanel(openPanel === "lighting" ? null : "lighting")}
           >
-            <Sun className="w-4 h-4" />
+            <Lightbulb className="w-4 h-4" />
           </Button>
           <Button
             variant={openPanel === "poses" ? "default" : "ghost"}
             size="icon"
             onClick={() => setOpenPanel(openPanel === "poses" ? null : "poses")}
           >
-            <Armchair className="w-4 h-4" />
+            <SplinePointer className="w-4 h-4" />
           </Button>
           <Button
             variant={openPanel === "poseControls" ? "default" : "ghost"}
@@ -189,7 +143,7 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick }: CharacterViewe
           </Button>
         </div>
 
-
+        {/* Canvas */}
         <Canvas
           ref={canvasRef}
           camera={{ position: [5, 0, 8], fov: 45 }}
@@ -200,65 +154,71 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick }: CharacterViewe
             setCamera(camera);
           }}
         >
-
           <ambientLight intensity={0.5} />
           <LightRenderer lights={lights} />
-          <MinecraftCharacter skinImage={skinImage} pose={currentPose} />
+          <GizmoHelper alignment="bottom-left" margin={[80, 80]}>
+            <GizmoViewport axisColors={["#ff3653", "#8adb00", "#2c8fff"]} labelColor="white" />
+          </GizmoHelper>
+          <MinecraftCharacter skinImage={skinImage} pose={currentPose.poseConfig} />
           <OrbitControls enablePan enableZoom enableRotate />
-          <Environment preset="studio" />
+          <Environment preset="sunset" />
         </Canvas>
+
+        <div className="absolute bottom-2 right-2">
+          <Stats className="!top-auto !bottom-0 !right-0" />
+        </div>
       </div>
 
-
-
-
-      {/* ---- Side Panel ---- */}
+      {/* Side Panels */}
       <div
-        className={`
-    absolute bg-white top-0 bottom-0 right-13 z-30 w-80 bg-card border-border p-4 overflow-y-auto
-    transition-transform duration-600 ease-in-out
-    ${openPanel ? "translate-x-0" : "translate-x-[calc(100%+4rem)]"}
-  `}
+        className={`absolute bg-white top-0 bottom-0 right-0 z-10 w-80 p-4 overflow-y-auto border-border transition-transform duration-600 ease-in-out
+          ${openPanel ? "translate-x-0" : "translate-x-[calc(100%+4rem)]"}`}
       >
-        {openPanel === "lighting" && (
-          <LightingControls lights={lights} onLightsChange={setLights} />
+        {openPanel === "quality" && (
+          <QualitySetting
+            quality={deviceQuality.quality}
+            autoDetectedQuality={deviceQuality.autoDetectedQuality}
+            isUserOverride={deviceQuality.isUserOverride}
+            onQualityChange={deviceQuality.setQuality}
+            onResetToAuto={deviceQuality.resetToAuto}
+            fps={deviceQuality.fps}
+          />
         )}
+        {openPanel === "lighting" && <LightingControls lights={lights} onLightsChange={setLights} />}
         {openPanel === "poses" && (
           <div>
-            <h4 className="font-semibold mb-3">Preset Poses</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.keys(PRESET_POSES).map((preset) => (
-                <Button
-                  key={preset}
-                  variant={selectedPreset === preset ? "default" : "outline"}
-                  size="sm"
-                  className="capitalize text-xs"
-                  onClick={() => handlePresetChange(preset)}
-                >
-                  {preset}
-                </Button>
-              ))}
-            </div>
-            <Button
-              className="w-full mt-3"
-              size="sm"
-              onClick={resetPose}
-            >
-              <RotateCcw className="w-4 h-4 mr-1" /> Reset
+            <div className="flex items-center mb-3 justify-between">
+            <h4 className="font-semibold">Preset Poses</h4>
+             <Button size="sm" onClick={resetPose}>
+              <RotateCcw className="w-4 h-4" />
             </Button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(PRESET_POSES).map(([key, presetData]) => (
+                <div
+                  key={key}
+                  onClick={() => handlePresetChange(key)}
+                  className={`cursor-pointer text-center text-xs rounded-lg border border-gray-400 overflow-hidden hover:bg-muted/40 transition
+      ${selectedPreset === key ? "ring-2 ring-green-500" : ""}`}
+                >
+                  <img
+                    src={presetData.poseMeta?.previewImgUrl || "./poseLabsPose/placeholder-pose.png"}
+                    alt={presetData.poseMeta?.name || key}
+                    className="w-full h-24 object-cover bg-gray-500"
+                    loading="lazy"
+                  />
+                  <div className="p-1 font-medium">{presetData.poseMeta?.name || key}</div>
+                </div>
+              ))}
+
+            </div>
+           
           </div>
         )}
-        {openPanel === "poseControls" && (
-          <PoseControls pose={currentPose} onPoseChange={handlePoseChange} />
-        )}
+        {openPanel === "poseControls" && <PoseControls pose={currentPose} onPoseChange={handlePoseChange} />}
       </div>
 
-
-      <RenderDialog
-        open={renderDialogOpen}
-        onOpenChange={setRenderDialogOpen}
-        onRender={handleHighQualityRender}
-      />
+      <RenderDialog open={renderDialogOpen} onOpenChange={setRenderDialogOpen} onRender={handleHighQualityRender} />
     </div>
   );
 };

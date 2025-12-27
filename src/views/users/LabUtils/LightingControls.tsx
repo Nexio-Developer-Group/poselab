@@ -62,7 +62,7 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
         </h4>
         <Button
           size="sm"
-          variant="secondary"
+          variant="default"
           onClick={addLight}
           className="h-8 px-2"
         >

@@ -45,8 +45,6 @@ export const createHighQualityRender = async (
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, quality));
 
   // Physically correct setup
-  renderer.physicallyCorrectLights = true;
-  renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.25;
   renderer.shadowMap.enabled = true;
@@ -79,7 +77,7 @@ export const createHighQualityRender = async (
         new THREE.Vector2(width, height),
         0.5 * quality, // intensity
         0.4, // radius
-        0.85 // threshold
+        1.4 // threshold
       );
       composer.addPass(bloomPass);
     }

@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect, Suspense, Component, ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, useGLTF, useAnimations } from "@react-three/drei";
+import { OrbitControls, Environment, useGLTF, useAnimations, GizmoHelper, GizmoViewport,Stats } from "@react-three/drei";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
-import { Camera, Upload, AlertCircle, Play, Pause, Download } from "lucide-react";
+import { Camera, Upload, AlertCircle, Play, Pause, Download, Sun, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LightingControls, Light } from "./LightingControls";
@@ -31,16 +30,14 @@ class ErrorBoundary extends Component<
   }
 
   render() {
-    if (this.state.hasError) {
-      return null;
-    }
+    if (this.state.hasError) return null;
     return this.props.children;
   }
 }
 
 interface ModelViewerProps {
   modelUrl: string;
-  onNewModel: () => void;
+  onChangeModelClick: () => void;
 }
 
 interface TextureInfo {
@@ -50,14 +47,13 @@ interface TextureInfo {
   mapType: string;
 }
 
-const Model = ({ 
-  url, 
+const Model = ({
+  url,
   onTexturesExtracted,
-  onError,
   onAnimationsFound,
   playingAnimation,
-  animationSpeed
-}: { 
+  animationSpeed,
+}: {
   url: string;
   onTexturesExtracted: (textures: TextureInfo[]) => void;
   onError: (error: Error) => void;
@@ -65,95 +61,65 @@ const Model = ({
   playingAnimation: string | null;
   animationSpeed: number;
 }) => {
-  const gltf = useGLTF(url, true, true, (loader) => {
-    loader.manager.onError = (itemUrl) => {
-      onError(new Error(`Failed to load: ${itemUrl}`));
-    };
-  });
-  
+  const gltf = useGLTF(url);
   const { scene, animations } = gltf;
   const { actions, names } = useAnimations(animations, scene);
-  const hasNotifiedRef = useRef(false);
-  
+  const notified = useRef(false);
+
   useEffect(() => {
-    if (names.length > 0 && !hasNotifiedRef.current) {
+    if (names.length > 0 && !notified.current) {
       onAnimationsFound(names);
-      hasNotifiedRef.current = true;
+      notified.current = true;
     }
   }, [names, onAnimationsFound]);
-  
+
   useEffect(() => {
-    // Stop all animations first
-    Object.values(actions).forEach(action => {
-      if (action) {
-        action.stop();
-      }
-    });
-    
-    // Play selected animation
+    Object.values(actions).forEach((a) => a?.stop());
     if (playingAnimation && actions[playingAnimation]) {
       const action = actions[playingAnimation];
-      if (action) {
-        action.timeScale = animationSpeed;
-        action.reset().play();
-      }
+      action.timeScale = animationSpeed;
+      action.reset().play();
     }
   }, [playingAnimation, actions, animationSpeed]);
-  
+
   useEffect(() => {
     const textures: TextureInfo[] = [];
     let materialIndex = 0;
-    
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         const material = mesh.material as THREE.MeshStandardMaterial;
-        
-        if (material.map) {
+        if (material.map)
           textures.push({
-            name: `${child.name || 'Material'}_diffuse`,
+            name: `${child.name}_diffuse`,
             texture: material.map,
             materialIndex,
-            mapType: 'map'
+            mapType: "map",
           });
-        }
-        if (material.normalMap) {
+        if (material.normalMap)
           textures.push({
-            name: `${child.name || 'Material'}_normal`,
+            name: `${child.name}_normal`,
             texture: material.normalMap,
             materialIndex,
-            mapType: 'normalMap'
+            mapType: "normalMap",
           });
-        }
-        if (material.roughnessMap) {
+        if (material.roughnessMap)
           textures.push({
-            name: `${child.name || 'Material'}_roughness`,
+            name: `${child.name}_roughness`,
             texture: material.roughnessMap,
             materialIndex,
-            mapType: 'roughnessMap'
+            mapType: "roughnessMap",
           });
-        }
-        if (material.metalnessMap) {
-          textures.push({
-            name: `${child.name || 'Material'}_metalness`,
-            texture: material.metalnessMap,
-            materialIndex,
-            mapType: 'metalnessMap'
-          });
-        }
-        
         materialIndex++;
       }
     });
-    
     onTexturesExtracted(textures);
   }, [scene, onTexturesExtracted]);
-  
-  // eslint-disable-next-line
+
   return <primitive object={scene} dispose={null} />;
 };
 
-export const ModelViewer = ({ modelUrl, onNewModel }: ModelViewerProps) => {
+export const ModelViewer = ({ modelUrl, onChangeModelClick }: ModelViewerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [textures, setTextures] = useState<TextureInfo[]>([]);
   const [scene, setScene] = useState<THREE.Scene | null>(null);
@@ -163,32 +129,67 @@ export const ModelViewer = ({ modelUrl, onNewModel }: ModelViewerProps) => {
   const [playingAnimation, setPlayingAnimation] = useState<string | null>(null);
   const [animationSpeed, setAnimationSpeed] = useState(1);
   const [renderDialogOpen, setRenderDialogOpen] = useState(false);
+  const [openPanel, setOpenPanel] = useState<"lighting" | "textures" | "animations" | null>(null);
+
   const [lights, setLights] = useState<Light[]>([
-    {
-      id: "light-1",
-      type: "directional",
-      position: [10, 10, 5],
-      color: "#ffffff",
-      intensity: 1,
-    },
-    {
-      id: "light-2",
-      type: "directional",
-      position: [-10, 5, -5],
-      color: "#ffffff",
-      intensity: 0.3,
-    },
+    { id: "key", type: "directional", position: [10, 10, 5], color: "#ffffff", intensity: 0.8 },
+    { id: "fill", type: "directional", position: [-10, 5, -5], color: "#ffffff", intensity: 0.2 },
   ]);
-  
-  const handleTexturesExtracted = (extractedTextures: TextureInfo[]) => {
-    setTextures(extractedTextures);
-    setLoadError(null);
+
+  const togglePanel = (panel: typeof openPanel) =>
+    setOpenPanel((prev) => (prev === panel ? null : panel));
+
+  const handleTexturesExtracted = (t: TextureInfo[]) => setTextures(t);
+  const handleAnimationsFound = (a: string[]) => setAnimations(a);
+
+  const takeScreenshot = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return toast.error("Canvas not found");
+    const link = document.createElement("a");
+    link.download = "screenshot.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    toast.success("Screenshot saved!");
   };
-  
-  const handleAnimationsFound = (animationNames: string[]) => {
-    setAnimations(animationNames);
+
+  const handleHQRender = async (settings: RenderSettings, onProgress: (n: number) => void) => {
+    if (!scene || !camera) throw new Error("Scene not ready");
+    return await createHighQualityRender(scene, camera, settings, onProgress);
   };
-  
+
+  const handleTextureReplace = (textureInfo: TextureInfo, file: File) => {
+  if (!scene) return toast.error("Scene not ready");
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const loader = new THREE.TextureLoader();
+    const newTexture = loader.load(e.target?.result as string, () => {
+      scene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          const material = mesh.material as THREE.MeshStandardMaterial;
+
+          if (material[textureInfo.mapType as keyof typeof material] === textureInfo.texture) {
+            // Only assign to writable texture properties, not read-only ones
+            if (
+              textureInfo.mapType === "map" ||
+              textureInfo.mapType === "normalMap" ||
+              textureInfo.mapType === "roughnessMap"
+            ) {
+              (material as any)[textureInfo.mapType] = newTexture;  // eslint-disable-line
+              material.needsUpdate = true;
+              mesh.material = material;
+            }
+          }
+        }
+      });
+      toast.success(`Replaced ${textureInfo.name}`);
+    });
+  };
+  reader.readAsDataURL(file);
+};
+
+
   const toggleAnimation = (name: string) => {
     if (playingAnimation === name) {
       setPlayingAnimation(null);
@@ -198,227 +199,137 @@ export const ModelViewer = ({ modelUrl, onNewModel }: ModelViewerProps) => {
       toast.success(`Playing: ${name}`);
     }
   };
-  
-  const handleModelError = (error: unknown) => {
-    console.error("Model loading error:", error);
-    let errorMessage = "";
-    if (typeof error === "string") {
-      errorMessage = error.toLowerCase();
-    } else if (error && typeof (error as any).message === "string") { // eslint-disable-line
-      errorMessage = (error as any).message.toLowerCase(); // eslint-disable-line
-    }
-    
-    if (errorMessage.includes("failed to load buffer") || errorMessage.includes(".bin")) {
-      setLoadError("This .gltf file requires external files (.bin, textures). Please use a .glb file with embedded data instead.");
-      toast.error("Model format error - use .glb files");
-    } else if (errorMessage.includes("texture")) {
-      setLoadError("Some textures failed to load. The model will display without them.");
-      toast.warning("Textures could not be loaded");
-    } else {
-      setLoadError("Failed to load the 3D model. Please try a different file.");
-      toast.error("Could not load model");
-    }
-  };
-  
-  const handleTextureChange = (textureInfo: TextureInfo, file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const image = new Image();
-      image.onload = () => {
-        const newTexture = new THREE.Texture(image);
-        newTexture.needsUpdate = true;
-        newTexture.wrapS = newTexture.wrapT = THREE.RepeatWrapping;
-        
-        // Update the texture in the scene
-        if (scene) {
-          let materialIndex = 0;
-          scene.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-              const mesh = child as THREE.Mesh;
-              const material = mesh.material as THREE.MeshStandardMaterial;
-              
-              if (materialIndex === textureInfo.materialIndex) {
-                (material as any)[textureInfo.mapType] = newTexture; // eslint-disable-line
-                material.needsUpdate = true;
-              }
-              
-              materialIndex++;
-            }
-          });
-        }
-        
-        toast.success(`Texture ${textureInfo.name} updated!`);
-      };
-      image.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  const takeScreenshot = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      toast.error("Canvas not found");
-      return;
-    }
-    
-    const link = document.createElement('a');
-    link.download = '3d-model-screenshot.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    
-    toast.success("Screenshot saved!");
-  };
 
-  const handleHighQualityRender = async (
-    settings: RenderSettings,
-    onProgress: (progress: number) => void
-  ) => {
-    if (!scene || !camera) {
-      toast.error("Scene not ready");
-      throw new Error("Scene not ready");
-    }
-
-    try {
-      const result = await createHighQualityRender(scene, camera, settings, onProgress);
-      return result;
-    } catch (error) {
-      console.error("Render error:", error);
-      toast.error("Failed to create high quality render");
-      throw error;
-    }
-  };
-  
   return (
-    <div className="min-h-screen flex">
+    <div className="relative w-full h-full bg-white flex overflow-hidden">
       {/* 3D Viewer */}
       <div className="flex-1 relative">
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background/80 to-transparent">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-gaming rounded-lg flex items-center justify-center shadow-glow">
-                <Camera className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold text-foreground">3D Model Viewer</h1>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                className="flex items-center gap-2"
-                onClick={onNewModel}
-              >
-                <Upload className="w-4 h-4" />
-                New Model
-              </Button>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                disabled={!!loadError}
-                onClick={takeScreenshot}
-              >
-                <Camera className="w-4 h-4" />
-                Screenshot
-              </Button>
-              <Button
-                className="flex items-center gap-2 bg-gradient-gaming hover:shadow-glow transition-smooth"
-                disabled={!!loadError}
-                onClick={() => setRenderDialogOpen(true)}
-              >
-                <Download className="w-4 h-4" />
-                HQ Render
-              </Button>
-            </div>
+        <div className="absolute z-20 flex justify-between items-center bg-white rounded-br-xl backdrop-blur-sm p-3">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onChangeModelClick}>
+              <Upload className="w-4 h-4 mr-1" /> New Model
+            </Button>
+            <Button variant="outline" onClick={takeScreenshot}>
+              <Camera className="w-4 h-4 mr-1" /> Screenshot
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => setRenderDialogOpen(true)}
+            >
+              <Download className="w-4 h-4 mr-1" /> HQ Render
+            </Button>
           </div>
         </div>
-        
-        {/* Error Alert */}
+
+
+        {/* Sidebar Tabs */}
+        <div className="absolute flex flex-col items-center top-16 z-10 border-gray-400 rounded-br-xl rounded-tr-xl bg-white w-14 p-2 space-y-4">
+          <Button
+            size="icon"
+            variant={openPanel === "lighting" ? "default" : "ghost"}
+            onClick={() => togglePanel("lighting")}
+          >
+            <Sun className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant={openPanel === "animations" ? "default" : "ghost"}
+            onClick={() => togglePanel("animations")}
+          >
+            <Play className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant={openPanel === "textures" ? "default" : "ghost"}
+            onClick={() => togglePanel("textures")}
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Error message */}
         {loadError && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 w-full max-w-2xl px-4">
-            <Alert variant="destructive" className="bg-destructive/90 backdrop-blur-sm">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="ml-2">
-                {loadError}
-              </AlertDescription>
-            </Alert>
-          </div>
+          <Alert variant="destructive" className="absolute top-20 left-1/2 -translate-x-1/2 z-30">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{loadError}</AlertDescription>
+          </Alert>
         )}
-        
+
+         <div className="relative bottom-2 right-2">
+          <Stats className="!top-auto !bottom-0 !right-0" />
+        </div>
+
+
         {/* 3D Canvas */}
         <Canvas
           ref={canvasRef}
-          camera={{ position: [0, 2, 5], fov: 45 }}
-          className="w-full h-full"
-          gl={{ 
-            preserveDrawingBuffer: true, 
-            alpha: true, 
-            antialias: true,
-            powerPreference: "high-performance"
-          }}
-          onCreated={({ scene: threeScene, camera: threeCamera }) => {
-            setScene(threeScene);
-            setCamera(threeCamera);
+          className="sm:w-auto bg-gray-950 border border-gray-300"
+          camera={{ position: [32, 0, 72], fov: 120 }}
+          gl={{ preserveDrawingBuffer: true, antialias: true }}
+          onCreated={({ scene, camera }) => {
+            setScene(scene);
+            setCamera(camera);
           }}
         >
           <ambientLight intensity={0.5} />
           <LightRenderer lights={lights} />
-          
+
+          <GizmoHelper
+            alignment="bottom-left"
+            margin={[80, 80]}
+          >
+            <GizmoViewport
+              axisColors={["#ff3653", "#8adb00", "#2c8fff"]} // X, Y, Z colors
+              labelColor="white"
+            />
+          </GizmoHelper>
+
           <Suspense fallback={null}>
-            <ErrorBoundary onError={handleModelError}>
-              <Model 
-                url={modelUrl} 
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <ErrorBoundary onError={(e) => setLoadError((e as any).message)}>
+              <Model
+                url={modelUrl}
+                onTexturesExtracted={handleTexturesExtracted}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onError={(e) => setLoadError((e as any).message)}
+                onAnimationsFound={handleAnimationsFound}
                 playingAnimation={playingAnimation}
                 animationSpeed={animationSpeed}
-                onTexturesExtracted={handleTexturesExtracted}
-                onError={handleModelError}
-                onAnimationsFound={handleAnimationsFound}
               />
             </ErrorBoundary>
           </Suspense>
-          
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={1}
-            maxDistance={20}
-            enableDamping={true}
-            dampingFactor={0.05}
-          />
-          
-          <Environment preset="studio" />
+          <OrbitControls enablePan enableZoom enableRotate />
+          <Environment preset="sunset" />
         </Canvas>
       </div>
-      
-      {/* Texture Controls Panel */}
-      <div className="w-80 bg-card border-l border-border p-6 overflow-y-auto">
-        <div className="space-y-4">
-          {/* Lighting Controls */}
-          <LightingControls lights={lights} onLightsChange={setLights} />
-          
-          {/* Animations */}
-          {animations.length > 0 && (
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-4">Animations</h3>
+
+      {/* Right Panel */}
+      <div
+        className={`
+    absolute bg-white top-0 bottom-0 right-0 z-10 w-80 bg-card border-border p-4 overflow-y-auto
+    transition-transform duration-600 ease-in-out
+    ${openPanel ? "translate-x-0" : "translate-x-[calc(100%+4rem)]"}
+  `}
+      >
+        <div className="overflow-y-auto h-full">
+          {openPanel === "lighting" && <LightingControls lights={lights} onLightsChange={setLights} />}
+          {openPanel === "animations" && (
+            <div>
+              <h4 className="font-semibold mb-4">Animations</h4>
               <div className="space-y-3">
-                <div className="space-y-2">
-                  {animations.map((name) => (
-                    <Button
-                      key={name}
-                      size="sm"
-                      variant={playingAnimation === name ? "default" : "outline"}
-                      className="w-full text-xs justify-between"
-                      onClick={() => toggleAnimation(name)}
-                    >
-                      <span className="truncate">{name}</span>
-                      {playingAnimation === name ? (
-                        <Pause className="w-3 h-3 ml-2 flex-shrink-0" />
-                      ) : (
-                        <Play className="w-3 h-3 ml-2 flex-shrink-0" />
-                      )}
-                    </Button>
-                  ))}
-                </div>
-                
+                {animations.map((name) => (
+                  <Button
+                    key={name}
+                    size="sm"
+                    variant={playingAnimation === name ? "default" : "outline"}
+                    className="w-full text-xs justify-between"
+                    onClick={() => toggleAnimation(name)}
+                  >
+                    {name}
+                    {playingAnimation === name ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+                  </Button>
+                ))}
                 {playingAnimation && (
                   <div>
                     <label className="text-xs text-muted-foreground mb-2 block">
@@ -429,59 +340,49 @@ export const ModelViewer = ({ modelUrl, onNewModel }: ModelViewerProps) => {
                       min={0.1}
                       max={3}
                       step={0.1}
-                      className="w-full"
-                      onValueChange={([value]) => setAnimationSpeed(value)}
+                      onValueChange={([v]) => setAnimationSpeed(v)}
                     />
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           )}
-          
-          <Card className="p-4">
-            <h3 className="font-semibold text-foreground mb-4">Textures</h3>
-            {textures.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Loading textures...</p>
-            ) : (
-              <div className="space-y-4">
-                {textures.map((textureInfo, index) => (
-                  <div key={index} className="border border-border rounded-lg p-3">
-                    <p className="text-sm font-medium text-foreground mb-2 truncate">
-                      {textureInfo.name}
-                    </p>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        id={`texture-${index}`}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleTextureChange(textureInfo, file);
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor={`texture-${index}`}
-                        className="flex items-center justify-center gap-2 w-full px-3 py-2 text-xs bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 cursor-pointer transition-smooth"
-                      >
-                        <Upload className="w-3 h-3" />
-                        Replace Texture
-                      </label>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Card>
+          {openPanel === "textures" && (
+            <div>
+              <h4 className="font-semibold mb-4">Textures</h4>
+              {textures.map((t, i) => (
+                <div key={i} className="border border-border rounded-lg p-3">
+                  <p className="text-sm font-medium mb-2 truncate">{t.name}</p>
+                  <input
+                    id={`texture-${i}`}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+  const file = e.target.files?.[0];
+  if (file) handleTextureReplace(t, file);
+}}
+
+                  />
+                  <label
+                    htmlFor={`texture-${i}`}
+                    className="text-xs px-3 py-2 bg-secondary rounded cursor-pointer hover:bg-secondary/80 flex items-center gap-2 justify-center"
+                  >
+                    <Upload className="w-3 h-3" /> Replace
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+
 
       <RenderDialog
         open={renderDialogOpen}
         onOpenChange={setRenderDialogOpen}
-        onRender={handleHighQualityRender}
+        onRender={handleHQRender}
       />
     </div>
   );

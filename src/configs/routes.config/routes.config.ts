@@ -18,12 +18,18 @@ export const protectedRoutes: Routes = [
         path: '/pose-lab',
         component: lazy(() => import('@/views/users/poseLab')),
         authority: [],
+        meta: {
+            pageContainerType: 'gutterless'
+        },
     },
     {
         key: 'ThreeDViewer',
         path: '/3d-viewer',
         component: lazy(() => import('@/views/users/threeDViewer')),
         authority: [],
+        meta: {
+            pageContainerType: 'gutterless'
+        },
     },
     
 ]
