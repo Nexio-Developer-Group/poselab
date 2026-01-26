@@ -16,7 +16,16 @@ export async function apiSignIn(data: SignInCredential) {
     const response = await ApiService.fetchDataWithAxios<ApiSignInResponse>({
         url: endpointConfig.signIn,
         method: 'post',
-        data: { login_type_id: 4, payload: data }
+        data: { login_type_id: 4, payload: data },
+    })
+    return mapApiResponseToUser(response)
+}
+
+export async function apiEmailSignIn(data: { id_token: string }) {
+    const response = await ApiService.fetchDataWithAxios<ApiSignInResponse>({
+        url: endpointConfig.signIn,
+        method: 'post',
+        data: { login_type_id: 4, payload: data },
     })
     return mapApiResponseToUser(response)
 }

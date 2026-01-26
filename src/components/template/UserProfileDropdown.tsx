@@ -4,15 +4,32 @@ import withHeaderItem from '@/utils/hoc/withHeaderItem'
 import { useSessionUser } from '@/store/authStore'
 import { Link } from 'react-router-dom'
 import { PiUserDuotone, PiSignOutDuotone } from 'react-icons/pi'
+import { User, Settings, Sparkles } from 'lucide-react'
 import { useAuth } from '@/auth'
+import type { ReactNode } from 'react'
 
 type DropdownList = {
     label: string
     path: string
-    icon: JSX.Element
+    icon: ReactNode
 }
 
 const dropdownItemList: DropdownList[] = [
+    {
+        label: 'Profile',
+        path: '/profile',
+        icon: <User className="w-5 h-5" />
+    },
+    {
+        label: 'Profile Settings',
+        path: '/profile/settings',
+        icon: <Settings className="w-5 h-5" />
+    },
+    {
+        label: 'Become a Creator',
+        path: '/profile/creator-application',
+        icon: <Sparkles className="w-5 h-5" />
+    },
 ]
 
 const _UserDropdown = () => {
@@ -46,7 +63,7 @@ const _UserDropdown = () => {
                         <div className="font-bold text-gray-900 dark:text-gray-100">
                             {userName || 'Anonymous'}
                         </div>
-                        <div className="text-xs">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                             {email || 'No email available'}
                         </div>
                     </div>
@@ -67,6 +84,7 @@ const _UserDropdown = () => {
                     </Link>
                 </Dropdown.Item>
             ))}
+            <Dropdown.Item variant="divider" />
             <Dropdown.Item
                 eventKey="Sign Out"
                 className="gap-2"
@@ -84,3 +102,4 @@ const _UserDropdown = () => {
 const UserDropdown = withHeaderItem(_UserDropdown)
 
 export default UserDropdown
+

@@ -65,9 +65,8 @@ const Drawer = (props: DrawerProps) => {
                 dimensionClass: 'vertical',
                 contentStyle: { width },
                 motionStyle: {
-                    [placement]: `-${width}${
-                        typeof width === 'number' && 'px'
-                    }`,
+                    [placement]: `-${width}${typeof width === 'number' && 'px'
+                        }`,
                 },
             }
         }
@@ -77,9 +76,8 @@ const Drawer = (props: DrawerProps) => {
                 dimensionClass: 'horizontal',
                 contentStyle: { height },
                 motionStyle: {
-                    [placement]: `-${height}${
-                        typeof height === 'number' && 'px'
-                    }`,
+                    [placement]: `-${height}${typeof height === 'number' && 'px'
+                        }`,
                 },
             }
         }

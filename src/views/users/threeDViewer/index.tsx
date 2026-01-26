@@ -1,53 +1,28 @@
-import { useState, useEffect } from "react";
-import { ModelUpload } from "./components/ModelUpload";
+import { useState } from "react";
+import ModelLibrary from "./components/ModelLibrary";
 import { ModelViewer } from "@/views/users/LabUtils/ModelViewer";
-import CharacterViewer from "@/views/users/LabUtils/CharacterViewer";
+import { type ModelItem } from "./config";
 
 const Index = () => {
-  const [modelType, setModelType] = useState<"model" | "skin" | null>(null);
-  const [modelUrl, setModelUrl] = useState<string | null>(null);
-  const [skinImage, setSkinImage] = useState<HTMLImageElement | null>(null);
+  const [selectedModel, setSelectedModel] = useState<ModelItem | null>(null);
 
-  const handleModelUpload = (file: File, url: string) => {
-    const fileName = file.name.toLowerCase();
-    const isImage = [".png", ".jpg", ".jpeg"].some(ext => fileName.endsWith(ext));
-
-    if (isImage) {
-      const img = new Image();
-      img.onload = () => {
-        setSkinImage(img);
-        setModelType("skin");
-        setModelUrl(url);
-      };
-      img.src = url;
-    } else {
-      setModelUrl(url);
-      setModelType("model");
-    }
+  const handleModelSelect = (model: ModelItem) => {
+    setSelectedModel(model);
   };
 
-  const handleNewModel = () => {
-    setModelUrl(null);
-    setModelType(null);
-    setSkinImage(null);
+  const handleExitViewer = () => {
+    setSelectedModel(null);
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c]">
-      {!modelUrl ? (
-        <ModelUpload onModelUpload={handleModelUpload} />
+    <div>
+      {!selectedModel ? (
+        <ModelLibrary onSelect={handleModelSelect} />
       ) : (
-        modelType === "skin" && skinImage ? (
-          <CharacterViewer
-            skinImage={skinImage}
-            onChangeSkinClick={handleNewModel}
-          />
-        ) : (
-          <ModelViewer
-            modelUrl={modelUrl}
-            onChangeModelClick={handleNewModel}
-          />
-        )
+        <ModelViewer
+          modelUrl={selectedModel.url}
+          onChangeModelClick={handleExitViewer}
+        />
       )}
     </div>
   );

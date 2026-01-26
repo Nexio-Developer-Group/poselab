@@ -10,9 +10,9 @@ const navigationConfig: NavigationTree[] = [
     {
         key: 'home',
         path: '/home',
-        title: 'Home',
+        title: 'Explore',
         translateKey: 'nav.home',
-        icon: 'home',
+        icon: 'creatorSpace',
         type: NAV_ITEM_TYPE_ITEM,
         authority: [],
         subMenu: [],
@@ -22,7 +22,7 @@ const navigationConfig: NavigationTree[] = [
         path: '/creator-space',
         title: 'Creator Space',
         translateKey: 'nav.creatorSpace',
-        icon: 'creatorSpace',
+        icon: 'home',
         type: NAV_ITEM_TYPE_ITEM,
         authority: [],
         subMenu: [],
@@ -41,7 +41,7 @@ const navigationConfig: NavigationTree[] = [
     {
         key: 'ThreeDViewer',
         path: '/3d-viewer',
-        title: '3D Viewer',
+        title: 'Model Library',
         translateKey: 'nav.ThreeDViewer',
         icon: 'ThreeDViewer',
         type: NAV_ITEM_TYPE_ITEM,
@@ -109,27 +109,6 @@ const navigationConfig: NavigationTree[] = [
         authority: [],
         subMenu: [],
     },
-    {
-        key: 'termsAndConditions',
-        path: '/terms-of-service',
-        title: 'Terms of Service',
-        translateKey: 'nav.termsAndConditions',
-        icon: 'termsAndConditions',
-        type: NAV_ITEM_TYPE_ITEM,
-        authority: [],
-        subMenu: [],
-    },
-    {
-        key: 'privacyPolicy',
-        path: '/privacy-policy',
-        title: 'Privacy Policy',
-        translateKey: 'nav.privacyPolicy',
-        icon: 'privacyPolicy',
-        type: NAV_ITEM_TYPE_ITEM,
-        authority: [],
-        subMenu: [],
-    },
-
 ]
 
 export default navigationConfig

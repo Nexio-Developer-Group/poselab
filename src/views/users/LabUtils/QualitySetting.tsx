@@ -41,45 +41,45 @@ export const QualitySetting = ({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h4 className="font-semibold text-foreground">Quality Settings</h4>
+            <h4 className="font-semibold text-white">Quality Settings</h4>
           </div>
           {fps !== undefined && (
-            <Badge className="text-white" variant={fps > 50 ? "default" : fps > 30 ? "default" : "default"}>
+            <Badge className="bg-primary text-black font-bold h-6" variant="default">
               {Math.round(fps)} FPS
             </Badge>
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <Label>Rendering Quality</Label>
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Rendering Quality</Label>
             {isUserOverride && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-[10px] bg-white/5 border-white/10 text-primary">
                 Manual
               </Badge>
             )}
           </div>
-          
+
           <Select value={quality} onValueChange={(v) => onQualityChange(v as QualityLevel)}>
-            <SelectTrigger>
+            <SelectTrigger className="bg-gray-900 border-white/10 text-white h-12 rounded-xl">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+            <SelectContent className="bg-gray-900 border-white/10 text-white rounded-xl shadow-2xl">
               {(["low", "medium", "high", "ultra"] as QualityLevel[]).map((level) => (
-                <SelectItem key={level} value={level}>
-                  <div className="flex items-center gap-2">
-                    <span>{QUALITY_ICONS[level]}</span>
-                    <span className="capitalize">{level}</span>
+                <SelectItem key={level} value={level} className="focus:bg-white/10 focus:text-white cursor-pointer py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{QUALITY_ICONS[level]}</span>
+                    <span className="capitalize font-medium">{level}</span>
                     {level === autoDetectedQuality && (
-                      <Cpu className="w-3 h-3 text-muted-foreground" />
+                      <Cpu className="w-3.5 h-3.5 text-primary" />
                     )}
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
-          <p className="text-xs text-muted-foreground">
+
+          <p className="text-[10px] font-medium text-gray-500 italic leading-relaxed">
             {QUALITY_DESCRIPTIONS[quality]}
           </p>
         </div>
@@ -89,22 +89,22 @@ export const QualitySetting = ({
             variant="outline"
             size="sm"
             onClick={onResetToAuto}
-            className="w-full flex items-center gap-2"
+            className="w-full h-10 rounded-xl flex items-center gap-2 bg-white/5 border-white/5 hover:border-primary/50 text-gray-400 hover:text-white transition-all font-bold text-[10px] uppercase tracking-widest"
           >
             <RotateCcw className="w-3 h-3" />
             Reset to Auto ({autoDetectedQuality})
           </Button>
         )}
 
-        <div className="pt-2 border-t border-border">
-          <div className="text-xs text-muted-foreground space-y-1">
-            <div className="flex justify-between">
-              <span>Auto-detected:</span>
-              <span className="font-medium capitalize">{autoDetectedQuality}</span>
+        <div className="pt-4 border-t border-white/5">
+          <div className="text-[10px] font-bold tracking-widest text-gray-600 uppercase space-y-2">
+            <div className="flex justify-between items-center">
+              <span>Auto-detected</span>
+              <span className="text-gray-400 bg-white/5 px-2 py-0.5 rounded uppercase">{autoDetectedQuality}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Active:</span>
-              <span className="font-medium capitalize">{quality}</span>
+            <div className="flex justify-between items-center">
+              <span>Active Profile</span>
+              <span className="text-primary bg-primary/10 px-2 py-0.5 rounded uppercase">{quality}</span>
             </div>
           </div>
         </div>

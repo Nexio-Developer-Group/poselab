@@ -12,25 +12,25 @@ type FooterProps = {
 
 const FooterContent = () => {
     return (
-        <div className="flex items-center justify-between flex-auto w-full">
-            <span>
+        <div className="flex items-center dark:border-gray-700 justify-between bg-gray-100 dark:bg-gray-950 flex-auto w-full">
+            <span className="text-gray-600 dark:text-gray-300">
                 Copyright &copy; {`${new Date().getFullYear()}`}{' '}
                 <span className="font-semibold">{`${APP_NAME}`}</span> All
                 rights reserved.
             </span>
             <div className="">
                 <a
-                    className="text-gray"
-                    href="/#"
-                    onClick={(e) => e.preventDefault()}
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    href="/terms-of-service"
+                    target="_blank"
                 >
                     Term & Conditions
                 </a>
                 <span className="mx-2 text-muted"> | </span>
                 <a
-                    className="text-gray"
-                    href="/#"
-                    onClick={(e) => e.preventDefault()}
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                    href="/privacy-policy"
+                    target="_blank"
                 >
                     Privacy & Policy
                 </a>
@@ -46,7 +46,7 @@ export default function Footer({
     return (
         <footer
             className={classNames(
-                `footer flex flex-auto items-center h-16 ${PAGE_CONTAINER_GUTTER_X}`,
+                `footer flex border-t border-gray-200 dark:border-gray-700 flex-auto items-center h-16 ${PAGE_CONTAINER_GUTTER_X}`,
                 className,
             )}
         >

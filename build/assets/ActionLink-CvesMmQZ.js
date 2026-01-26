@@ -1,0 +1,1 @@
+import{a as l,j as t,L as x}from"./index-iUiVPI1x.js";const u=o=>{const{children:s,className:n,themeColor:c=!0,to:e,reloadDocument:m,href:i="",...r}=o,a={className:l(c&&"text-primary","hover:underline",n)};return e?t.jsx(x,{to:e,reloadDocument:m,...a,...r,children:s}):t.jsx("a",{href:i,...a,...r,children:s})};export{u as A};

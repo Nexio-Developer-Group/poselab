@@ -2,7 +2,8 @@ import { useRef, useImperativeHandle } from 'react'
 import AuthContext from './AuthContext'
 import appConfig from '@/configs/app.config'
 import { useSessionUser, useToken } from '@/store/authStore'
-import { apiSignIn, apiSignOut, apiSignUp } from '@/services/AuthService'
+import { apiSignIn, apiSignOut, apiSignUp, apiEmailSignIn } from '@/services/AuthService'
+import { signInEmailPassword, getIdToken } from '@/services/FirebaseAuthService'
 import { REDIRECT_URL_KEY } from '@/constants/app.constant'
 import { useNavigate } from 'react-router-dom'
 import type {
@@ -74,7 +75,13 @@ function AuthProvider({ children }: AuthProviderProps) {
 
     const signIn = async (values: SignInCredential): AuthResult => {
         try {
-            const resp = await apiSignIn(values)
+            const userCredential = await signInEmailPassword(
+                values.email,
+                values.password,
+            )
+            const idToken = await getIdToken(userCredential)
+            const resp = await apiEmailSignIn({ id_token: idToken })
+
             if (resp) {
                 handleSignIn({ accessToken: resp.token }, resp.user)
                 redirect()
@@ -106,17 +113,18 @@ function AuthProvider({ children }: AuthProviderProps) {
                     redirect()
                 } else {
                     // If no token from sign up, verify credentials using sign in to get token
-                    const signInResp = await apiSignIn({
+                    const signInResp = await signIn({
                         email: values.email,
                         password: values.password,
                     })
 
-                    if (signInResp && signInResp.token) {
-                        handleSignIn({ accessToken: signInResp.token }, signInResp.user)
-                        redirect()
+                    if (signInResp.status === 'success') {
+                        // signIn already handles handleSignIn and redirect
                     } else {
                         // Fallback if auto-login fails, though user is created
-                        navigatorRef.current?.navigate(appConfig.unAuthenticatedEntryPath)
+                        navigatorRef.current?.navigate(
+                            appConfig.unAuthenticatedEntryPath,
+                        )
                     }
                 }
 

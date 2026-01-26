@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import { Slider } from "@/components/ui/slider";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import classNames from "@/utils/classNames";
 
 export interface Light {
   id: string;
@@ -57,14 +58,14 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h4 className="font-semibold text-foreground flex items-center gap-2">
+        <h4 className="font-semibold text-white flex items-center gap-2">
           Lighting
         </h4>
         <Button
           size="sm"
-          variant="default"
+          variant="secondary"
           onClick={addLight}
-          className="h-8 px-2"
+          className="h-8 px-2 bg-white/10 hover:bg-white/20 text-white"
         >
           <Plus className="w-4 h-4" />
         </Button>
@@ -79,7 +80,10 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
                 size="sm"
                 variant={selectedLight === light.id ? "default" : "outline"}
                 onClick={() => setSelectedLight(light.id)}
-                className="h-8 text-xs"
+                className={classNames(
+                  "h-8 text-xs",
+                  selectedLight === light.id ? "bg-primary text-black" : "border-white/10 text-gray-400 hover:text-white"
+                )}
               >
                 Light {index + 1}
               </Button>
@@ -88,7 +92,7 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
                   size="sm"
                   variant="ghost"
                   onClick={() => removeLight(light.id)}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 text-gray-500 hover:text-red-400"
                 >
                   <Trash2 className="w-3 h-3" />
                 </Button>
@@ -101,7 +105,7 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
           <div className="space-y-4 pt-2">
             {/* Light type */}
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label className="text-xs text-gray-500 mb-2 block uppercase tracking-widest font-bold">
                 Type
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -111,7 +115,10 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
                     size="sm"
                     variant={selectedLightData.type === type ? "default" : "outline"}
                     onClick={() => updateLight(selectedLightData.id, { type })}
-                    className="capitalize text-xs h-8"
+                    className={classNames(
+                      "capitalize text-[10px] font-bold h-8 tracking-wider",
+                      selectedLightData.type === type ? "bg-primary text-black" : "border-white/10 text-gray-400 hover:text-white"
+                    )}
                   >
                     {type}
                   </Button>
@@ -121,8 +128,8 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
 
             {/* Intensity */}
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
-                Intensity: {selectedLightData.intensity.toFixed(1)}
+              <label className="text-xs text-gray-500 mb-2 block uppercase tracking-widest font-bold">
+                Intensity: <span className="text-primary">{selectedLightData.intensity.toFixed(1)}</span>
               </label>
               <Slider
                 value={[selectedLightData.intensity]}
@@ -138,23 +145,25 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
 
             {/* Color */}
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
+              <label className="text-xs text-gray-500 mb-2 block uppercase tracking-widest font-bold">
                 Color
               </label>
-              <input
-                type="color"
-                value={selectedLightData.color}
-                onChange={(e) =>
-                  updateLight(selectedLightData.id, { color: e.target.value })
-                }
-                className="w-full h-10 rounded border border-border cursor-pointer"
-              />
+              <div className="relative group">
+                <input
+                  type="color"
+                  value={selectedLightData.color}
+                  onChange={(e) =>
+                    updateLight(selectedLightData.id, { color: e.target.value })
+                  }
+                  className="w-full h-10 rounded-xl bg-gray-900 border border-white/10 cursor-pointer overflow-hidden"
+                />
+              </div>
             </div>
 
             {/* Position X */}
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
-                Position X: {selectedLightData.position[0].toFixed(1)}
+              <label className="text-xs text-gray-500 mb-2 block uppercase tracking-widest font-bold">
+                Position X: <span className="text-blue-400">{selectedLightData.position[0].toFixed(1)}</span>
               </label>
               <Slider
                 value={[selectedLightData.position[0]]}
@@ -172,8 +181,8 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
 
             {/* Position Y */}
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
-                Position Y: {selectedLightData.position[1].toFixed(1)}
+              <label className="text-xs text-gray-500 mb-2 block uppercase tracking-widest font-bold">
+                Position Y: <span className="text-green-400">{selectedLightData.position[1].toFixed(1)}</span>
               </label>
               <Slider
                 value={[selectedLightData.position[1]]}
@@ -191,8 +200,8 @@ export const LightingControls = ({ lights, onLightsChange }: LightingControlsPro
 
             {/* Position Z */}
             <div>
-              <label className="text-xs text-muted-foreground mb-2 block">
-                Position Z: {selectedLightData.position[2].toFixed(1)}
+              <label className="text-xs text-gray-500 mb-2 block uppercase tracking-widest font-bold">
+                Position Z: <span className="text-purple-400">{selectedLightData.position[2].toFixed(1)}</span>
               </label>
               <Slider
                 value={[selectedLightData.position[2]]}

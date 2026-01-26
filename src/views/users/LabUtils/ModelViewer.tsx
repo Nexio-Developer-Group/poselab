@@ -3,7 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, useGLTF, useAnimations, GizmoHelper, GizmoViewport, Stats } from "@react-three/drei";
 import { Button } from "@/components/ui/Button";
 import { Slider } from "@/components/ui/slider";
-import { Camera, Upload, AlertCircle, Play, Pause, Download, Sun, Settings, Accessibility, Layers, Paintbrush, Share, LogOut, RotateCcw, RotateCw, Lightbulb } from "lucide-react";
+import { Camera, Upload, AlertCircle, Play, Pause, Download, Sun, Settings, Accessibility, Layers, Paintbrush, Share, LogOut, RotateCcw, RotateCw, Lightbulb, ArrowLeft, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LightingControls, Light } from "./LightingControls";
@@ -269,7 +269,7 @@ export const ModelViewer = ({ modelUrl, onChangeModelClick }: ModelViewerProps) 
   return (
     <div className="relative w-full h-[100vh] bg-gray-950 flex overflow-hidden text-white font-sans selection:bg-blue-500/30">
       {/* Left Sidebar */}
-      <aside className="w-24 border-r border-white/5 flex flex-col items-center py-8 gap-10 bg-gray-900 z-20">
+      <aside className="w-24 border-r border-white/5 flex flex-col items-center py-8 gap-10 bg-gray-900">
         <div className="mb-4">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Settings className="w-6 h-6 text-white" />
@@ -314,8 +314,16 @@ export const ModelViewer = ({ modelUrl, onChangeModelClick }: ModelViewerProps) 
       {/* Main Viewport */}
       <main className="flex-1 relative flex flex-col bg-[#0a0a0c]">
         {/* Header/Breadcrumbs */}
-        <div className="absolute top-6 left-8 z-10 flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-lg backdrop-blur-md">
+        <div className="absolute top-6 left-8 flex items-center gap-4">
+          <button
+            onClick={onChangeModelClick}
+            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-lg backdrop-blur-md hover:bg-white/10 transition-all group"
+          >
+            <ChevronLeft className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
+            <span className="text-xs font-bold text-gray-200 uppercase tracking-widest">Back to Library</span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/5 rounded-lg backdrop-blur-md">
             <span className="text-xs font-medium text-gray-400">PoseLab.gg</span>
             <span className="text-xs text-gray-600">/</span>
             <span className="text-xs font-semibold text-white">Character Editor</span>
@@ -518,9 +526,6 @@ export const ModelViewer = ({ modelUrl, onChangeModelClick }: ModelViewerProps) 
           </div>
         )}
 
-        <div className="absolute bottom-36 left-8 opacity-50 pointer-events-none scale-75 origin-left">
-          <Stats className="!static" />
-        </div>
       </main>
 
       <RenderDialog

@@ -81,62 +81,68 @@ export const SkinUpload = ({ onSkinUpload }: SkinUploadProps) => {
   };
 
   return (
-    <Card className="w-full p-4 shadow-lg rounded-xl bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950">
-  <div
-    className={`
-      border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer
-      ${isDragOver
-        ? "border-primary bg-primary/10 shadow-lg"
-        : "border-border hover:border-primary/50 hover:bg-primary/5"
-      }
-    `}
-    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-    onDragLeave={() => setIsDragOver(false)}
-    onDrop={handleDrop}
-    onClick={() => fileInputRef.current?.click()}
-  >
-    {uploadedSkin ? (
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-24 h-24 border border-border rounded-lg overflow-hidden bg-gray-900">
-          <img
-            src={uploadedSkin.preview}
-            alt="Uploaded skin"
-            className="w-full h-full object-contain pixel-art"
-            style={{ imageRendering: 'pixelated' }}
-          />
-        </div>
-        <div className="flex items-center gap-2 text-primary font-semibold">
-          <CheckCircle className="w-5 h-5" /> {uploadedSkin.file.name}
-        </div>
-        <p className="text-xs text-muted-foreground">64x64 PNG • Ready</p>
+    <Card className="w-full border-0">
+      <div
+        className={`
+          border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer group
+          ${isDragOver
+            ? "border-primary bg-primary/5 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+            : "border-white/5 bg-[#0a0a0c]/40 hover:border-primary/40 hover:bg-primary/[0.02]"
+          }
+        `}
+        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {uploadedSkin ? (
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-24 h-24 border border-white/10 rounded-xl overflow-hidden bg-black/40 p-2 shadow-inner">
+              <img
+                src={uploadedSkin.preview}
+                alt="Uploaded skin"
+                className="w-full h-full object-contain pixel-art"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-center gap-2 text-primary font-black uppercase tracking-widest text-[10px]">
+                <CheckCircle className="w-4 h-4 fill-primary/10" /> {uploadedSkin.file.name}
+              </div>
+              <p className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">Diagnostic: 64x64 PNG • Integrity Verified</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-4">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+              <Upload className="w-8 h-8 text-gray-500 group-hover:text-primary transition-colors" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-gray-300 font-black uppercase tracking-widest">Deploy custom appearance</p>
+              <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Drop skin or click to browse</p>
+            </div>
+          </div>
+        )}
       </div>
-    ) : (
-      <div className="flex flex-col items-center gap-2">
-        <Upload className="w-10 h-10 text-muted-foreground" />
-        <p className="text-sm text-foreground font-medium">Drop skin or click to upload</p>
-        <p className="text-xs text-muted-foreground">PNG • 64x64 pixels</p>
-      </div>
-    )}
-  </div>
 
-  <input
-    ref={fileInputRef}
-    type="file"
-    accept=".png"
-    className="hidden"
-    onChange={handleFileSelect}
-  />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".png"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
 
-  {uploadedSkin && (
-    <Button
-      className="w-full mt-4 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white hover:shadow-xl transition-all"
-      size="sm"
-      onClick={handleLoadCharacter}
-    >
-      Load Skin
-    </Button>
-  )}
-</Card>
+      {uploadedSkin && (
+        <Button
+          className="w-full mt-6 bg-primary hover:bg-white text-black font-black uppercase tracking-[0.2em] text-[10px] h-12 rounded-xl transition-all shadow-lg shadow-primary/20"
+          size="sm"
+          onClick={handleLoadCharacter}
+        >
+          Initialize Appearance
+        </Button>
+      )}
+    </Card>
 
   );
 };

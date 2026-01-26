@@ -70,11 +70,11 @@ const SignInForm = (props: SignInFormProps) => {
             const result = await signIn({ email, password })
 
             if (result?.status === 'failed') {
-                setMessage?.('invalid credentials')
+                setMessage?.(result.message || 'invalid credentials')
             }
-        }
 
-        setSubmitting(false)
+            setSubmitting(false)
+        }
     }
 
     const onSendOtp = async () => {

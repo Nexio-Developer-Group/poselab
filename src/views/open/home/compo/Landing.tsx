@@ -9,9 +9,9 @@ const Index = () => {
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       {/* Hero Section */}
-      <section className="relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden">
+      <section className="relative flex min-h-[92vh] flex-col items-center justify-center overflow-hidden py-20 px-4">
         <div
-          className="absolute inset-0 z-0 opacity-40 grayscale"
+          className="absolute inset-0 z-0 opacity-30 grayscale"
           style={{
             backgroundImage: `url(${heroImage})`,
             backgroundSize: 'cover',
@@ -22,60 +22,60 @@ const Index = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-primary/5 to-gray-950/95 z-0" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_5%,_#020202_95%)] z-10" />
 
-        <div className="relative z-20 text-center max-w-5xl mx-auto px-6">
-          <div className="mb-6">
-            <Logo mode="dark" logoWidth={220} className="mx-auto" />
+        <div className="relative z-20 text-center max-w-5xl mx-auto px-4">
+          <div className="mb-6 sm:mb-8">
+            <Logo mode="dark" logoWidth={180} className="mx-auto sm:w-[220px]" />
           </div>
 
-          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-semibold text-primary animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.2)]">
-            <Sparkles className="w-4 h-4" />
-            <span className="tracking-wide uppercase">3D MINECRAFT SKIN STUDIO ENGINE v1.0</span>
+          <div className="mb-6 inline-flex items-center gap-2 sm:gap-3 rounded-full border border-white/10 bg-white/5 px-4 sm:px-6 py-2 sm:py-2.5 text-[10px] sm:text-sm font-black text-primary animate-pulse shadow-[0_0_20px_rgba(var(--primary-rgb),0.2)] tracking-widest">
+            <Sparkles className="w-3 h-3 sm:w-4 h-4" />
+            <span className="uppercase">3D SKIN STUDIO ENGINE v1.0</span>
           </div>
 
-          <h1 className="mb-8 text-5xl md:text-7xl font-black leading-[1.4] tracking-tighter">
+          <h1 className="mb-6 sm:mb-8 text-4xl sm:text-6xl md:text-8xl font-black leading-[0.9] tracking-tighter">
             DESIGN, POSE & <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary-deep animate-gradient">
               RENDER YOUR SKINS
             </span>
           </h1>
 
-          <p className="mx-auto mb-12 max-w-2xl text-lg md:text-lg text-gray-100 font-medium leading-relaxed">
+          <p className="mx-auto mb-10 sm:mb-12 max-w-2xl text-base sm:text-lg md:text-xl text-gray-300 font-medium leading-relaxed px-2">
             The ultimate workstation for Minecraft creators. Professional-grade 3D rigging,
             cinematic lighting, and high-fidelity rendering—all in your browser.
           </p>
 
-          <div className="flex flex-col items-center justify-center gap-6 sm:flex-row">
+          <div className="flex flex-col items-stretch sm:items-center justify-center gap-4 sm:gap-6 sm:flex-row max-w-xs sm:max-w-none mx-auto">
             <Link to="/pose-lab">
-            <Button className="h-14 px-10 transition-all bg-primary hover:bg-primary text-black font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95">
-              START CREATING
-            </Button>
+              <Button className="w-full sm:w-auto h-14 px-10 transition-all bg-primary hover:bg-primary-deep text-black font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95">
+                START CREATING
+              </Button>
             </Link>
             <Link to="/home">
-            <Button variant="outline" className="h-14 px-10 border-white/10 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 backdrop-blur-md transition-all">
-              EXPLORE SHOWCASE
-            </Button>
+              <Button variant="outline" className="w-full sm:w-auto h-14 px-10 border-white/10 bg-white/5 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-white/10 backdrop-blur-md transition-all">
+                EXPLORE SHOWCASE
+              </Button>
             </Link>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="relative px-6 py-32 bg-gray-950">
+      <section id="features" className="relative px-4 sm:px-6 py-20 sm:py-32 bg-gray-950">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
         <div className="mx-auto max-w-7xl">
-          <div className="mb-24 text-center">
-            <h2 className="mb-6 text-3xl bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary-deep animate-gradient font-extrabold md:text-6xl tracking-tight">
+          <div className="mb-16 sm:mb-24 text-center">
+            <h2 className="mb-4 sm:mb-6 text-3xl sm:text-5xl md:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary-deep animate-gradient font-black tracking-tighter uppercase leading-[0.9]">
               CREATE WITHOUT LIMITS
             </h2>
-            <div className="w-2xl h-1 bg-primary mx-auto rounded-full mb-8 shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
-            <p className="text-lg text-gray-100 max-w-xl mx-auto font-medium">
+            <div className="w-16 sm:w-32 h-1.5 bg-primary mx-auto rounded-full mb-6 sm:mb-8 shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
+            <p className="text-base sm:text-lg text-gray-400 max-w-xl mx-auto font-medium leading-relaxed">
               Everything you need to bring your Minecraft character to life with
               unparalleled precision and style.
             </p>
           </div>
 
-          <div className="grid gap-10 md:grid-cols-3">
+          <div className="grid gap-6 sm:gap-10 grid-cols-1 md:grid-cols-3 px-2">
             <FeatureCard
               icon={<Move3d className="h-8 w-8 text-primary" />}
               title="3D Rigging Engine"
