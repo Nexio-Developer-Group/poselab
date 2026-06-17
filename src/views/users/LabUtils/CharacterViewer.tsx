@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Suspense, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, GizmoHelper, GizmoViewport } from "@react-three/drei";
 import * as THREE from "three";
+import { mutate } from "swr";
 
 import { NewMinecraftCharacter } from "./rigid-system/NewMinecraftCharacter";
 import { RIGID_POSES, BENDABLE_RIGID_POSES } from "./rigid-system/posePresets";
@@ -13,6 +14,7 @@ import { RenderDialog, RenderSettings } from "./RenderDialog";
 import { createHighQualityRender } from "./renderUtils";
 import { Camera, Upload, Download, Lightbulb, Gpu, Accessibility, Smile, LogOut, Menu, X } from "lucide-react";
 import { toast } from "sonner";
+import { useSessionUser } from "@/store/authStore";
 import { QualitySetting } from "./QualitySetting";
 import { getQualityPreset } from "./qualitySettings";
 import { useDeviceQuality } from "./hooks/useDeviceQuality";
@@ -45,6 +47,14 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
     { id: "light-1", type: "directional", position: [10, 10, 5], color: "#ffffff", intensity: 1.2 },
     { id: "light-2", type: "directional", position: [-10, 5, -5], color: "#ffffff", intensity: 0.3 },
   ]);
+
+  const userId = useSessionUser((state) => state.user?.email ?? '');
+
+  const handleSaveSuccess = useCallback(() => {
+    if (userId) {
+      mutate(`creations-${userId}`);
+    }
+  }, [userId]);
 
   const deviceQuality = useDeviceQuality();
   const qualityPreset = getQualityPreset(deviceQuality.quality);
@@ -454,7 +464,14 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
         {/* Stats removed for WebGL stability */}
       </main>
 
-      <RenderDialog open={renderDialogOpen} onOpenChange={setRenderDialogOpen} onRender={handleHighQualityRender} />
+      <RenderDialog
+        open={renderDialogOpen}
+        onOpenChange={setRenderDialogOpen}
+        onRender={handleHighQualityRender}
+        poseSnapshot={currentPose?.poseConfig?.rotations as Record<string, unknown>}
+        skinUrl={skinImage?.src}
+        onSaveSuccess={handleSaveSuccess}
+      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }

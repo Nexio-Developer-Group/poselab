@@ -13,8 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/Input";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, X, Sparkles } from "lucide-react";
+import { Download, Loader2, X, Sparkles, BookmarkPlus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import CreationService from "@/services/CreationService";
 
 export interface RenderSettings {
   width: number;
@@ -27,6 +29,9 @@ interface RenderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRender: (settings: RenderSettings, onProgress: (progress: number) => void) => Promise<{ blob: Blob; previewUrl: string }>;
+  poseSnapshot?: Record<string, unknown>;
+  skinUrl?: string;
+  onSaveSuccess?: () => void;
 }
 
 const PRESET_SIZES = [
@@ -37,7 +42,7 @@ const PRESET_SIZES = [
   { label: "Custom", value: "custom" },
 ];
 
-export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps) => {
+export const RenderDialog = ({ open, onOpenChange, onRender, poseSnapshot, skinUrl, onSaveSuccess }: RenderDialogProps) => {
   const [sizePreset, setSizePreset] = useState("1920x1080");
   const [customWidth, setCustomWidth] = useState(1920);
   const [customHeight, setCustomHeight] = useState(1080);
@@ -47,6 +52,8 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
   const [renderProgress, setRenderProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [renderedBlob, setRenderedBlob] = useState<Blob | null>(null);
+  const [lastSettings, setLastSettings] = useState<RenderSettings | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleRender = async () => {
     let width = customWidth;
@@ -69,6 +76,7 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
     setRenderProgress(0);
     setPreviewUrl(null);
     setRenderedBlob(null);
+    setLastSettings(settings);
 
     try {
       const result = await onRender(settings, setRenderProgress);
@@ -113,6 +121,26 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
     setRenderProgress(0);
   };
 
+  const handleSaveToGallery = async () => {
+    if (!previewUrl) return;
+    setIsSaving(true);
+    try {
+      await CreationService.saveRender({
+        imageDataUrl: previewUrl,
+        poseSnapshot: poseSnapshot ?? {},
+        skinUrl: skinUrl,
+        renderSettings: lastSettings ? { ...lastSettings } : {},
+      });
+      toast.success('Render saved to gallery!');
+      onSaveSuccess?.();
+      handleClose();
+    } catch {
+      toast.error('Failed to save render');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="bg-gray-900/95 border border-white/10 max-w-[95vw] sm:max-w-[700px] text-white p-0 overflow-hidden backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-none !duration-0 data-[state=open]:animate-none data-[state=closed]:animate-none">
@@ -152,7 +180,7 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
                       style={{ maxHeight: "500px", objectFit: "contain" }}
                     />
                   </div>
-                  <div className="flex gap-3 justify-end">
+                  <div className="flex gap-3 justify-end flex-wrap">
                     <Button
                       variant="outline"
                       onClick={handleClose}
@@ -163,10 +191,27 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
                     </Button>
                     <Button
                       onClick={handleDownload}
-                      className="bg-primary hover:bg-white text-black font-bold px-8"
+                      className="bg-white/10 hover:bg-white/20 text-white font-bold border border-white/10"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Save Render
+                      Download
+                    </Button>
+                    <Button
+                      onClick={handleSaveToGallery}
+                      disabled={isSaving}
+                      className="bg-primary hover:bg-white text-black font-bold px-8"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <BookmarkPlus className="w-4 h-4 mr-2" />
+                          Save to Gallery
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
