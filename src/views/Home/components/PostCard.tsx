@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
     Heart,
@@ -5,10 +6,13 @@ import {
     Share2,
     Bookmark,
     MoreHorizontal,
-    Play
+    Play,
+    Flag
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Avatar } from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
+import FeedService from '@/services/FeedService'
 
 interface PostProps {
     post: any
@@ -29,6 +33,28 @@ const PostCard = ({
     onToggleBookmark,
     onToggleFollow
 }: PostProps) => {
+    const [menuOpen, setMenuOpen] = useState(false)
+    const menuRef = useRef<HTMLDivElement>(null)
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false)
+            }
+        }
+        if (menuOpen) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [menuOpen])
+
+    const handleReport = async () => {
+        setMenuOpen(false)
+        await FeedService.reportPost(post.id)
+        toast.success('Post reported. Our team will review it shortly.')
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -65,9 +91,34 @@ const PostCard = ({
                         </div>
                     </div>
                 </div>
-                <button className="p-2 text-gray-500 hover:text-white transition-colors">
-                    <MoreHorizontal className="w-5 h-5" />
-                </button>
+
+                {/* 3-dot menu */}
+                <div className="relative" ref={menuRef}>
+                    <button
+                        onClick={() => setMenuOpen(prev => !prev)}
+                        className="p-2 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                        aria-label="Post options"
+                    >
+                        <MoreHorizontal className="w-5 h-5" />
+                    </button>
+
+                    {menuOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{ duration: 0.12 }}
+                            className="absolute right-0 top-full mt-1 w-44 bg-gray-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                        >
+                            <button
+                                onClick={handleReport}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-bold text-gray-300 hover:bg-white/5 hover:text-red-400 transition-colors"
+                            >
+                                <Flag className="w-4 h-4 flex-shrink-0" />
+                                Report Post
+                            </button>
+                        </motion.div>
+                    )}
+                </div>
             </div>
 
             {/* Post Content */}
