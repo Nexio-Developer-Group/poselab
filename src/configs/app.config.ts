@@ -14,10 +14,10 @@ export type AppConfig = {
 
 const appConfig: AppConfig = {
     appVersion: '0.0.1',
-    appUrl: 'https://poselab.nexiotech.cloud',
+    appUrl: import.meta.env.VITE_APP_URL || 'https://poselab.nexiotech.cloud',
     appName: 'PoseLab',
     appDescription: 'PoseLab – Minecraft Skin Posing & Render Tool',
-    apiBaseUrl: 'https://poselab-backend.nexiotech.cloud',
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://poselab-backend.nexiotech.cloud',
     apiPrefix: '/api',
     authenticatedEntryPath: '/home',
     unAuthenticatedEntryPath: '/sign-in',

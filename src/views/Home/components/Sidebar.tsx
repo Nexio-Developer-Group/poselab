@@ -5,13 +5,56 @@ import {
     Trophy
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { motion } from 'framer-motion'
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import useSWR from 'swr'
+import FeedService, { type Challenge } from '@/services/FeedService'
 
-interface SidebarProps {
-    challenges: any[]
+// ---------------------------------------------------------------------------
+// Animated entries count
+// ---------------------------------------------------------------------------
+
+function AnimatedCount({ target }: { target: number }) {
+    const motionVal = useMotionValue(0)
+    const springVal = useSpring(motionVal, { stiffness: 60, damping: 18 })
+    const displayVal = useTransform(springVal, v => {
+        if (v >= 1000) return `${(v / 1000).toFixed(1)}k`
+        return Math.round(v).toString()
+    })
+    const hasAnimated = useRef(false)
+
+    useEffect(() => {
+        if (!hasAnimated.current) {
+            hasAnimated.current = true
+            motionVal.set(target)
+        }
+    }, [motionVal, target])
+
+    return <motion.span>{displayVal}</motion.span>
 }
 
-const Sidebar = ({ challenges }: SidebarProps) => {
+// Parse "1.2k" → 1200, "850" → 850
+function parseEntries(raw: string): number {
+    const trimmed = raw.trim().toLowerCase()
+    if (trimmed.endsWith('k')) return parseFloat(trimmed) * 1000
+    return parseFloat(trimmed) || 0
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar
+// ---------------------------------------------------------------------------
+
+interface SidebarProps {
+    challenges: Challenge[]
+}
+
+const Sidebar = ({ challenges: fallbackChallenges }: SidebarProps) => {
+    const { data: apiChallenges } = useSWR('challenges', () => FeedService.getChallenges())
+
+    const challenges: Challenge[] = (apiChallenges && apiChallenges.length > 0)
+        ? apiChallenges
+        : fallbackChallenges
+
     return (
         <div className="hidden lg:block space-y-8 sticky top-36 h-fit">
             {/* Model Library Project Card */}
@@ -37,7 +80,7 @@ const Sidebar = ({ challenges }: SidebarProps) => {
             </motion.div>
 
             {/* Trending Challenges */}
-            {/* <div className="p-7 rounded-[2.5rem] bg-gray-900/40 border border-white/5 backdrop-blur-xl shadow-xl">
+            <div className="p-7 rounded-[2.5rem] bg-gray-900/40 border border-white/5 backdrop-blur-xl shadow-xl">
                 <div className="flex items-center gap-3 mb-8">
                     <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
                         <TrendingUp className="w-4 h-4 text-primary" />
@@ -61,7 +104,9 @@ const Sidebar = ({ challenges }: SidebarProps) => {
                                 <span className="text-[10px] font-black text-gray-700 group-hover:text-primary transition-colors">0{index + 1}</span>
                                 <div>
                                     <p className="text-xs font-black uppercase tracking-widest text-white group-hover:text-primary transition-colors">#{challenge.name}</p>
-                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">{challenge.entries} Poses</p>
+                                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter">
+                                        <AnimatedCount target={parseEntries(challenge.entries)} /> Poses
+                                    </p>
                                 </div>
                             </div>
                             <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-gray-600 group-hover:bg-primary group-hover:text-black transition-all group-hover:shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)]">
@@ -74,7 +119,7 @@ const Sidebar = ({ challenges }: SidebarProps) => {
                 <Button variant="outline" className="w-full mt-8 bg-white/5 border-white/5 text-gray-400 font-black uppercase tracking-widest text-[10px] h-11 rounded-2xl hover:text-white hover:bg-white/10 transition-all">
                     View All Events
                 </Button>
-            </div> */}
+            </div>
 
             {/* Footer */}
             <div className="space-y-6 px-4">

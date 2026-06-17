@@ -1,3 +1,4 @@
+// @deprecated — Use rigid-system/NewMinecraftCharacter instead. Kept for reference only.
 import { useMemo, useRef, useEffect, useCallback } from "react";
 import * as THREE from "three";
 import { createPortal } from "@react-three/fiber";

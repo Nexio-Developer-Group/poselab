@@ -11,7 +11,10 @@
     "prettier:fix": "npm run prettier -- --write",
     "lint": "npx eslint",
     "lint:fix": "npm run lint -- --fix",
-    "format": "npm run prettier:fix && npm run lint:fix"
+    "format": "npm run prettier:fix && npm run lint:fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.2",
@@ -87,6 +90,9 @@
     "@eslint/js": "^9.17.0",
     "@tailwindcss/postcss": "^4.0.8",
     "@tailwindcss/typography": "^0.5.15",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/d3-fetch": "^3.0.7",
     "@types/d3-scale": "^4.0.8",
     "@types/js-cookie": "^3.0.6",
@@ -102,6 +108,7 @@
     "@typescript-eslint/eslint-plugin": "^8.5.0",
     "@typescript-eslint/parser": "^8.5.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^4.1.9",
     "color": "^4.2.3",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
@@ -112,6 +119,7 @@
     "eslint-plugin-react": "^7.37.3",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
+    "jsdom": "^29.1.1",
     "postcss": "^8.4.45",
     "postcss-nesting": "^13.0.0",
     "prettier": "^3.3.3",
@@ -119,6 +127,7 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5",
-    "vite-plugin-dynamic-import": "^1.5.0"
+    "vite-plugin-dynamic-import": "^1.5.0",
+    "vitest": "^4.1.9"
   }
 }

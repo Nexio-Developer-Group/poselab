@@ -1,3 +1,4 @@
+// @deprecated — Use rigid-system/NewMinecraftCharacter instead. Kept for reference only.
 import { useRef, useEffect } from "react";
 import { Group, BoxGeometry, CanvasTexture, MeshPhongMaterial } from "three";
 

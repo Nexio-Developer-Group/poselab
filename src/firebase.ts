@@ -1,31 +1,24 @@
-// src/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from 'firebase/auth'
 
-
 const firebaseConfig = {
-  apiKey: "AIzaSyDlxnhkCH_m4CVVCdjgzF7BAS4YAk6Zn10",
-  authDomain: "poselab-584a8.firebaseapp.com",
-  projectId: "poselab-584a8",
-  storageBucket: "poselab-584a8.firebasestorage.app",
-  messagingSenderId: "350044736479",
-  appId: "1:350044736479:web:aa43b1ceb0622a10a9526a",
-  measurementId: "G-ZL15YJRKHY"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app) 
+const auth = getAuth(app)
 
-// Initialize Analytics (only if supported in this environment)
 let analytics: ReturnType<typeof getAnalytics> | undefined;
 isSupported().then((yes) => {
   if (yes) {
     analytics = getAnalytics(app);
-    console.log("Firebase Analytics initialized 🚀");
-  } else {
-    console.log("Analytics not supported in this environment");
   }
 });
 
