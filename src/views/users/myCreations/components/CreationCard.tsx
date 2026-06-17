@@ -1,7 +1,8 @@
-import React, { cloneElement } from 'react'
+import React, { cloneElement, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Eye, Heart, Download, Share2, MoreVertical, Trash2, Edit3, PlayCircle, Image as ImageIcon } from 'lucide-react'
 import classNames from '@/utils/classNames'
+import CreationService from '@/services/CreationService'
 
 export interface Creation {
     id: string
@@ -17,15 +18,32 @@ export interface Creation {
 interface CreationCardProps {
     creation: Creation
     viewMode: 'grid' | 'list'
+    mutate?: () => void
 }
 
-const CreationCard = ({ creation, viewMode }: CreationCardProps) => {
+const CreationCard = ({ creation, viewMode, mutate }: CreationCardProps) => {
     const isGrid = viewMode === 'grid'
+    const [isDeleting, setIsDeleting] = useState(false)
 
     const typeIcons = {
         pose: <PlayCircle className="w-4 h-4 text-emerald-400" />,
         render: <ImageIcon className="w-4 h-4 text-blue-400" />,
         animation: <PlayCircle className="w-4 h-4 text-purple-400" />,
+    }
+
+    const handleDelete = async () => {
+        const confirmed = window.confirm(`Delete "${creation.title}"? This action cannot be undone.`)
+        if (!confirmed) return
+
+        setIsDeleting(true)
+        try {
+            await CreationService.deleteCreation(creation.id)
+            mutate?.()
+        } catch {
+            alert('Failed to delete creation. Please try again.')
+        } finally {
+            setIsDeleting(false)
+        }
     }
 
     return (
@@ -57,6 +75,18 @@ const CreationCard = ({ creation, viewMode }: CreationCardProps) => {
                     {typeIcons[creation.type]}
                     {creation.type}
                 </div>
+
+                {/* Delete button — grid only, visible on hover */}
+                {isGrid && (
+                    <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="absolute top-3 right-3 p-2 rounded-md bg-black/60 backdrop-blur-md border border-white/10 text-gray-400 hover:text-red-400 hover:border-red-400/30 hover:bg-red-950/40 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Delete creation"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                )}
 
                 {/* Quick Action Flyout (Grid Only) */}
                 {isGrid && (
@@ -105,8 +135,13 @@ const CreationCard = ({ creation, viewMode }: CreationCardProps) => {
             {/* List Action Buttons */}
             {!isGrid && (
                 <div className="flex flex-col justify-center gap-2 border-l border-white/5 pl-4">
-                    <ListActionBtn icon={<Edit3 />} color="hover:text-blue-400" />
-                    <ListActionBtn icon={<Trash2 />} color="hover:text-red-400" />
+                    <ListActionBtn icon={<Edit3 />} color="hover:text-blue-400" onClick={() => undefined} />
+                    <ListActionBtn
+                        icon={<Trash2 />}
+                        color="hover:text-red-400"
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                    />
                 </div>
             )}
         </motion.div>
@@ -115,13 +150,27 @@ const CreationCard = ({ creation, viewMode }: CreationCardProps) => {
 
 const ActionButton = ({ icon }: { icon: React.ReactNode }) => (
     <button className="p-3 rounded-full bg-primary text-white shadow-2xl hover:scale-110 active:scale-95 transition-all">
-        {React.isValidElement(icon) ? cloneElement(icon as React.ReactElement<any>, { className: 'w-5 h-5' }) : icon}
+        {React.isValidElement(icon) ? cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-5 h-5' }) : icon}
     </button>
 )
 
-const ListActionBtn = ({ icon, color }: { icon: React.ReactNode, color: string }) => (
-    <button className={classNames('p-2 text-gray-500 transition-colors', color)}>
-        {React.isValidElement(icon) ? cloneElement(icon as React.ReactElement<any>, { className: 'w-4 h-4' }) : icon}
+const ListActionBtn = ({
+    icon,
+    color,
+    onClick,
+    disabled,
+}: {
+    icon: React.ReactNode
+    color: string
+    onClick: () => void
+    disabled?: boolean
+}) => (
+    <button
+        className={classNames('p-2 text-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed', color)}
+        onClick={onClick}
+        disabled={disabled}
+    >
+        {React.isValidElement(icon) ? cloneElement(icon as React.ReactElement<{ className?: string }>, { className: 'w-4 h-4' }) : icon}
     </button>
 )
 
