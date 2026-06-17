@@ -115,7 +115,7 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-gray-900/95 border border-white/10 sm:max-w-[700px] text-white p-0 overflow-hidden backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-none !duration-0 data-[state=open]:animate-none data-[state=closed]:animate-none">
+      <DialogContent className="bg-gray-900/95 border border-white/10 max-w-[95vw] sm:max-w-[700px] text-white p-0 overflow-hidden backdrop-blur-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-none !duration-0 data-[state=open]:animate-none data-[state=closed]:animate-none">
         <AnimatePresence mode="wait">
           {open && (
             <motion.div
@@ -123,7 +123,7 @@ export const RenderDialog = ({ open, onOpenChange, onRender }: RenderDialogProps
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="p-8 space-y-6"
+              className="p-4 sm:p-8 space-y-4 sm:space-y-6 overflow-y-auto max-h-[85dvh]"
             >
               <DialogHeader>
                 <div className="flex items-center gap-3 mb-2">
