@@ -11,7 +11,7 @@ import { LightingControls, Light } from "./LightingControls";
 import { LightRenderer } from "./LightRenderer";
 import { RenderDialog, RenderSettings } from "./RenderDialog";
 import { createHighQualityRender } from "./renderUtils";
-import { Camera, Upload, Download, Lightbulb, Gpu, Accessibility, Smile, LogOut } from "lucide-react";
+import { Camera, Upload, Download, Lightbulb, Gpu, Accessibility, Smile, LogOut, Menu, X } from "lucide-react";
 import { toast } from "sonner";
 import { QualitySetting } from "./QualitySetting";
 import { getQualityPreset } from "./qualitySettings";
@@ -35,6 +35,8 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
   const [selectedPreset, setSelectedPreset] = useState("standing");
 
   const [openPanel, setOpenPanel] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
@@ -72,6 +74,15 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
   useEffect(() => {
     if (sceneRef.current) enhanceSceneMaterials(sceneRef.current, undefined, qualityPreset);
   }, [qualityPreset]);
+
+  // Track mobile viewport
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+    update(mq);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const handleModelChange = (model: 'rigid' | 'bendable') => {
     if (model === characterModel) return;
@@ -175,50 +186,82 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
     </button>
   );
 
+  const sidebarContent = (
+    <>
+      <SidebarButton
+        icon={Accessibility}
+        label="POSE"
+        active={openPanel === "poses" || openPanel === "poseControls"}
+        onClick={() => { setOpenPanel(openPanel === "poses" ? "poseControls" : "poses"); setSidebarOpen(false); }}
+      />
+      <SidebarButton
+        icon={Smile}
+        label="FACE"
+        active={openPanel === "expressions"}
+        onClick={() => { setOpenPanel("expressions"); setSidebarOpen(false); }}
+      />
+      <SidebarButton
+        icon={Lightbulb}
+        label="LIGHT"
+        active={openPanel === "lighting"}
+        onClick={() => { setOpenPanel("lighting"); setSidebarOpen(false); }}
+      />
+      <SidebarButton
+        icon={Gpu}
+        label="GFX"
+        active={openPanel === "quality"}
+        onClick={() => { setOpenPanel("quality"); setSidebarOpen(false); }}
+      />
+
+      <div className="mt-auto flex flex-col gap-6 items-center">
+        <button className="text-gray-500 hover:text-white transition-colors" onClick={() => { setRenderDialogOpen(true); setSidebarOpen(false); }}>
+          <Download className="w-5 h-5" />
+        </button>
+        <button className="text-gray-500 hover:text-red-400 transition-colors" onClick={(e) => { onChangeSkinClick(e.currentTarget); setSidebarOpen(false); }}>
+          <Upload className="w-5 h-5" />
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="relative w-full flex overflow-hidden text-white font-sans" style={{ backgroundColor: '#020202' }}>
-      {/* Sidebar */}
-      <aside className="w-24 min-h-[calc(100vh-12rem)] border-r border-white/5 flex flex-col items-center py-8 gap-10 bg-gray-900">
+      {/* Mobile sidebar overlay backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <SidebarButton
-          icon={Accessibility}
-          label="POSE"
-          active={openPanel === "poses" || openPanel === "poseControls"}
-          onClick={() => setOpenPanel(openPanel === "poses" ? "poseControls" : "poses")}
-        />
-        <SidebarButton
-          icon={Smile}
-          label="FACE"
-          active={openPanel === "expressions"}
-          onClick={() => setOpenPanel("expressions")}
-        />
-        <SidebarButton
-          icon={Lightbulb}
-          label="LIGHT"
-          active={openPanel === "lighting"}
-          onClick={() => setOpenPanel("lighting")}
-        />
-        <SidebarButton
-          icon={Gpu}
-          label="GFX"
-          active={openPanel === "quality"}
-          onClick={() => setOpenPanel("quality")}
-        />
+      {/* Mobile sidebar (overlay, slides in from left) */}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 bottom-0 z-50 w-24 bg-gray-900 flex-col items-center py-8 gap-10 transition-transform duration-300 md:hidden",
+          sidebarOpen ? "flex translate-x-0" : "flex -translate-x-full"
+        )}
+      >
+        {sidebarContent}
+      </aside>
 
-        <div className="mt-auto flex flex-col gap-6 items-center">
-          <button className="text-gray-500 hover:text-white transition-colors" onClick={() => setRenderDialogOpen(true)}>
-            <Download className="w-5 h-5" />
-          </button>
-          <button className="text-gray-500 hover:text-red-400 transition-colors" onClick={(e) => onChangeSkinClick(e.currentTarget)}>
-            <Upload className="w-5 h-5" />
-          </button>
-        </div>
+      {/* Desktop sidebar (always visible on md+) */}
+      <aside className="hidden md:flex w-24 min-h-[calc(100dvh-12rem)] border-r border-white/5 flex-col items-center py-8 gap-10 bg-gray-900">
+        {sidebarContent}
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 relative flex flex-col" style={{ backgroundColor: '#020202' }}>
+      <main className="flex-1 relative flex flex-col min-h-[calc(100dvh-12rem)]" style={{ backgroundColor: '#020202' }}>
+        {/* Hamburger toggle (mobile only) */}
+        <button
+          className="flex md:hidden absolute top-4 left-4 z-20 p-2 bg-gray-900/80 border border-white/10 rounded-xl text-gray-400 hover:text-white transition-colors"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
         {/* Header/Breadcrumbs Overlay */}
-        <div className="absolute top-8 left-10 z-50 flex items-center gap-3">
+        <div className="absolute top-8 left-16 md:left-10 z-50 flex items-center gap-3">
           <div className="flex items-center gap-3 px-5 py-2.5 bg-gray-900/40 border border-white/10 rounded-2xl backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.3)]">
             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] animate-pulse">PoseLab.gg</span>
             <span className="text-xs text-gray-600">/</span>
@@ -268,6 +311,7 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
               enableDamping
               dampingFactor={0.05}
               rotateSpeed={0.8}
+              touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
               onStart={handleInteractionStart}
               onEnd={handleInteractionEnd}
             />
@@ -275,8 +319,8 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
           </Canvas>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="flex absolute right-5 top-5 items-center z-10 bg-gray-800/40 border border-white/5 rounded-2xl p-2 px-4 shadow-2xl backdrop-blur-xl">
+        {/* Bottom Bar (desktop) */}
+        <div className="hidden sm:flex absolute right-5 top-5 items-center z-10 bg-gray-800/40 border border-white/5 rounded-2xl p-2 px-4 shadow-2xl backdrop-blur-xl">
           <BottomControlGroup label="MODEL">
             <button
               onClick={() => handleModelChange('rigid')}
@@ -308,11 +352,29 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
           </BottomControlGroup>
         </div>
 
-        {/* Floating Side Panel */}
+        {/* Mobile FAB (small screens only) */}
+        <div className="flex sm:hidden absolute bottom-4 right-4 z-20 gap-2">
+          <button
+            onClick={takeScreenshot}
+            className="p-3 bg-gray-900/80 border border-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+            aria-label="Screenshot"
+          >
+            <Camera className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setRenderDialogOpen(true)}
+            className="p-3 bg-gray-900/80 border border-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
+            aria-label="Render"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Floating Side Panel (desktop / non-poseControls on mobile) */}
         <div
           className={cn(
-            "fixed top-6 bottom-38 right-6 z-30 w-80 bg-gray-900/95 border border-white/10 rounded-3xl backdrop-blur-2xl shadow-2xl transition-all duration-500 ease-in-out p-6 overflow-hidden flex flex-col",
-            openPanel ? "translate-x-0 opacity-100" : "translate-x-[120%] opacity-0"
+            "fixed top-6 bottom-4 md:bottom-38 right-6 z-30 w-80 bg-gray-900/95 border border-white/10 rounded-3xl backdrop-blur-2xl shadow-2xl transition-all duration-500 ease-in-out p-6 overflow-hidden flex flex-col",
+            openPanel && !(isMobile && openPanel === "poseControls") ? "translate-x-0 opacity-100" : "translate-x-[120%] opacity-0"
           )}
         >
           <div className="flex justify-between items-center mb-6">
@@ -363,11 +425,31 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
                   ))}
               </div>
             )}
-            {openPanel === "poseControls" && (
+            {openPanel === "poseControls" && !isMobile && (
               <PoseControls pose={currentPose} onPoseChange={handlePoseChange} />
             )}
           </div>
         </div>
+
+        {/* Bottom sheet: poseControls on mobile */}
+        {isMobile && openPanel === "poseControls" && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 bg-gray-900/98 border-t border-white/10 rounded-t-3xl p-6 max-h-[60dvh] overflow-y-auto md:hidden custom-scrollbar">
+            {/* Drag handle */}
+            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4" />
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-xs font-bold tracking-widest text-white uppercase italic">Pose Controls</h4>
+              <button
+                onClick={() => setOpenPanel(null)}
+                className="text-gray-500 hover:text-white"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <PoseControls pose={currentPose} onPoseChange={handlePoseChange} />
+          </div>
+        )}
 
         {/* Stats removed for WebGL stability */}
       </main>
@@ -380,7 +462,7 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
       `}</style>
-    </div >
+    </div>
   );
 };
 
