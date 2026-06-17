@@ -10,6 +10,36 @@ interface NewMinecraftCharacterProps {
     bendable?: boolean;
 }
 
+/**
+ * Module-level cache for CanvasTextures keyed by skin image src.
+ * Avoids re-creating identical textures on every re-render and across
+ * multiple character instances that share the same skin.
+ * Limited to 5 entries to prevent unbounded memory growth.
+ */
+const textureCache = new Map<string, THREE.CanvasTexture>();
+
+const MAX_TEXTURE_CACHE_SIZE = 5;
+
+const getCachedTexture = (cacheKey: string, factory: () => THREE.CanvasTexture): THREE.CanvasTexture => {
+    const cached = textureCache.get(cacheKey);
+    if (cached) return cached;
+
+    const texture = factory();
+
+    // Evict oldest entry when cache is full
+    if (textureCache.size >= MAX_TEXTURE_CACHE_SIZE) {
+        const oldestKey = textureCache.keys().next().value;
+        if (oldestKey !== undefined) {
+            const oldTexture = textureCache.get(oldestKey);
+            oldTexture?.dispose();
+            textureCache.delete(oldestKey);
+        }
+    }
+
+    textureCache.set(cacheKey, texture);
+    return texture;
+};
+
 export const NewMinecraftCharacter: React.FC<NewMinecraftCharacterProps> = ({ skinImage, pose, bendable = false }) => {
     // 1. Create Rig Definition
     const rigDefinition = useMemo(() => createMinecraftRig(bendable), [bendable]);
@@ -33,29 +63,35 @@ export const NewMinecraftCharacter: React.FC<NewMinecraftCharacterProps> = ({ sk
             return faces.map(face => {
                 const [fx, fy, fw, fh] = face.rect;
 
-                const canvas = document.createElement('canvas');
-                // Scale for crisp pixels
-                const scale = 4;
-                canvas.width = fw * scale;
-                canvas.height = fh * scale;
-                const ctx = canvas.getContext('2d');
+                // Build a stable cache key from skin src + face coordinates
+                const cacheKey = `${skinImage?.src ?? 'noskin'}|${fx},${fy},${fw},${fh}`;
 
-                if (ctx) {
-                    ctx.imageSmoothingEnabled = false;
-                    if (skinImage) {
-                        ctx.drawImage(skinImage, fx, fy, fw, fh, 0, 0, fw * scale, fh * scale);
-                    } else {
-                        ctx.fillStyle = '#777';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const tex = getCachedTexture(cacheKey, () => {
+                    const canvas = document.createElement('canvas');
+                    // Scale for crisp pixels
+                    const scale = 4;
+                    canvas.width = fw * scale;
+                    canvas.height = fh * scale;
+                    const ctx = canvas.getContext('2d');
+
+                    if (ctx) {
+                        ctx.imageSmoothingEnabled = false;
+                        if (skinImage) {
+                            ctx.drawImage(skinImage, fx, fy, fw, fh, 0, 0, fw * scale, fh * scale);
+                        } else {
+                            ctx.fillStyle = '#777';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
                     }
-                }
 
-                const tex = new THREE.CanvasTexture(canvas);
-                tex.colorSpace = THREE.SRGBColorSpace;
-                tex.magFilter = THREE.NearestFilter;
-                tex.minFilter = THREE.NearestFilter;
-                tex.generateMipmaps = false;
-                tex.flipY = true; // Important for mapping to box faces
+                    const t = new THREE.CanvasTexture(canvas);
+                    t.colorSpace = THREE.SRGBColorSpace;
+                    t.magFilter = THREE.NearestFilter;
+                    t.minFilter = THREE.NearestFilter;
+                    t.generateMipmaps = false;
+                    t.flipY = true; // Important for mapping to box faces
+                    return t;
+                });
 
                 return new THREE.MeshStandardMaterial({
                     map: tex,

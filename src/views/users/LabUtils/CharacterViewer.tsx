@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, GizmoHelper, GizmoViewport } from "@react-three/drei";
 
@@ -56,6 +56,28 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
 
   const deviceQuality = useDeviceQuality();
   const qualityPreset = getQualityPreset(deviceQuality.quality);
+
+  // Only enable heavy post-processing effects for high/ultra quality
+  const usePostProcessing = deviceQuality.quality === 'high' || deviceQuality.quality === 'ultra';
+
+  // Demand rendering: only run the render loop while the user is interacting
+  const [isInteracting, setIsInteracting] = useState(false);
+  const interactingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleInteractionStart = useCallback(() => {
+    if (interactingTimeoutRef.current) clearTimeout(interactingTimeoutRef.current);
+    setIsInteracting(true);
+  }, []);
+
+  const handleInteractionEnd = useCallback(() => {
+    interactingTimeoutRef.current = setTimeout(() => setIsInteracting(false), 2000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (interactingTimeoutRef.current) clearTimeout(interactingTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (sceneRef.current) enhanceSceneMaterials(sceneRef.current, undefined, qualityPreset);
@@ -233,7 +255,9 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
           <Canvas
             ref={canvasRef}
             camera={{ position: [0, 2, 12], fov: 45 }}
-            gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
+            gl={{ preserveDrawingBuffer: true, antialias: qualityPreset.antialias, alpha: true }}
+            frameloop={isInteracting ? "always" : "demand"}
+            dpr={[1, qualityPreset.pixelRatio ?? 2]}
             className="z-10 relative" // Added relative to ensure z-index works on the R3F wrapper
             onCreated={({ scene, camera }) => {
               sceneRef.current = scene;
@@ -242,6 +266,7 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
           >
             <ambientLight intensity={1.2} />
             <LightRenderer lights={lights} />
+            {usePostProcessing && <fog attach="fog" args={['#020202', 20, 60]} />}
             <GizmoHelper alignment="bottom-left" margin={[80, 80]}>
               <GizmoViewport axisColors={["#ff3653", "#8adb00", "#2c8fff"]} labelColor="white" />
             </GizmoHelper>
@@ -265,7 +290,18 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
                 />
               )}
             </Suspense>
-            <OrbitControls enablePan enableZoom enableRotate />
+            <OrbitControls
+              enablePan
+              enableZoom
+              enableRotate
+              minDistance={3}
+              maxDistance={30}
+              enableDamping
+              dampingFactor={0.05}
+              rotateSpeed={0.8}
+              onStart={handleInteractionStart}
+              onEnd={handleInteractionEnd}
+            />
             <Environment preset="sunset" />
           </Canvas>
         </div>
