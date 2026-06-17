@@ -1,24 +1,18 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Environment, GizmoHelper, GizmoViewport } from "@react-three/drei";
+import * as THREE from "three";
 
-import { MinecraftCharacter } from "./standard/MinecraftCharacter";
-import { BendableMinecraftCharacter } from "./bendable/BendableMinecraftCharacter";
-import { PoseControls as StandardPoseControls } from "./standard/PoseControls";
-import { PoseControls as BendablePoseControls } from "./bendable/PoseControls";
-
-import STANDARD_POSES from "./standard/posePresets";
-import BENDABLE_POSES from "./bendable/posePresets";
 import { NewMinecraftCharacter } from "./rigid-system/NewMinecraftCharacter";
 import { RIGID_POSES, BENDABLE_RIGID_POSES } from "./rigid-system/posePresets";
+import { PoseControls } from "./rigid-system/PoseControls";
 
 import { LightingControls, Light } from "./LightingControls";
 import { LightRenderer } from "./LightRenderer";
 import { RenderDialog, RenderSettings } from "./RenderDialog";
 import { createHighQualityRender } from "./renderUtils";
-import { Camera, Upload, Download, RotateCcw, Lightbulb, Gpu, Box, Accessibility, Smile, LogOut, RotateCw } from "lucide-react";
+import { Camera, Upload, Download, Lightbulb, Gpu, Accessibility, Smile, LogOut } from "lucide-react";
 import { toast } from "sonner";
-import * as THREE from "three";
 import { QualitySetting } from "./QualitySetting";
 import { getQualityPreset } from "./qualitySettings";
 import { useDeviceQuality } from "./hooks/useDeviceQuality";
@@ -32,13 +26,9 @@ export interface CharacterViewerProps {
 }
 
 export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: CharacterViewerProps) => {
-  const [characterModel, setCharacterModel] = useState<'default' | 'bendable' | 'new_rigid' | 'new_bendable'>('default');
+  const [characterModel, setCharacterModel] = useState<'rigid' | 'bendable'>('rigid');
 
-  const activePresets =
-    characterModel === 'default' ? STANDARD_POSES :
-      characterModel === 'bendable' ? BENDABLE_POSES :
-        characterModel === 'new_rigid' ? RIGID_POSES :
-          BENDABLE_RIGID_POSES;
+  const activePresets = characterModel === 'rigid' ? RIGID_POSES : BENDABLE_RIGID_POSES;
   const defaultPose = activePresets.standing || Object.values(activePresets)[0];
 
   const [currentPose, setCurrentPose] = useState(pose || defaultPose);
@@ -61,19 +51,12 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
     if (sceneRef.current) enhanceSceneMaterials(sceneRef.current, undefined, qualityPreset);
   }, [qualityPreset]);
 
-  const handleModelChange = (model: 'default' | 'bendable' | 'new_rigid' | 'new_bendable') => {
+  const handleModelChange = (model: 'rigid' | 'bendable') => {
     if (model === characterModel) return;
 
-    // Get the correct presets for the NEW model
-    const newPresets =
-      model === 'default' ? STANDARD_POSES :
-        model === 'bendable' ? BENDABLE_POSES :
-          model === 'new_rigid' ? RIGID_POSES :
-            BENDABLE_RIGID_POSES;
+    const newPresets = model === 'rigid' ? RIGID_POSES : BENDABLE_RIGID_POSES;
     const newDefault = newPresets.standing || Object.values(newPresets)[0];
 
-    // Update everything in one batch to ensure they stay in sync
-    // This is critical to prevent passing a Bendable pose to the Standard renderer
     setCharacterModel(model);
     setCurrentPose(newDefault);
     setSelectedPreset("standing");
@@ -81,17 +64,23 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
     toast(`Switched to ${newDefault.poseMeta?.name || "Default"} for ${model} model`);
   };
 
-  const handlePoseChange = (bodyPart: string, axis: string, value: number) => {
-    setCurrentPose((prev: any) => ({
-      ...prev,
-      poseConfig: {
-        ...prev.poseConfig,
-        [bodyPart]: {
-          ...prev.poseConfig[bodyPart],
-          [axis]: value,
+  const handlePoseChange = (partName: string, axis: 'x' | 'y' | 'z', valueDeg: number) => {
+    setCurrentPose((prev: any) => {
+      const prevEuler: THREE.Euler = prev.poseConfig.rotations[partName] || new THREE.Euler(0, 0, 0);
+      const newEuler = new THREE.Euler(prevEuler.x, prevEuler.y, prevEuler.z, prevEuler.order);
+      newEuler[axis] = (valueDeg * Math.PI) / 180;
+
+      return {
+        ...prev,
+        poseConfig: {
+          ...prev.poseConfig,
+          rotations: {
+            ...prev.poseConfig.rotations,
+            [partName]: newEuler,
+          },
         },
-      },
-    }));
+      };
+    });
     setSelectedPreset("custom");
   };
 
@@ -215,13 +204,6 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
           </div>
         </div>
 
-        {/* <button
-          onClick={takeScreenshot}
-          className="absolute top-8 right-10 z-50 p-4 bg-gray-900/40 border border-white/10 rounded-2xl hover:bg-primary/20 hover:border-primary/50 transition-all backdrop-blur-2xl text-white group shadow-2xl"
-        >
-          <Camera className="w-5 h-5 group-hover:scale-125 transition-transform" />
-        </button> */}
-
         {/* Canvas Area */}
         <div className="h-full relative overflow-hidden" style={{ backgroundColor: '#020202' }}>
 
@@ -234,7 +216,7 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
             ref={canvasRef}
             camera={{ position: [0, 2, 12], fov: 45 }}
             gl={{ preserveDrawingBuffer: true, antialias: true, alpha: true }}
-            className="z-10 relative" // Added relative to ensure z-index works on the R3F wrapper
+            className="z-10 relative"
             onCreated={({ scene, camera }) => {
               sceneRef.current = scene;
               cameraRef.current = camera;
@@ -246,24 +228,11 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
               <GizmoViewport axisColors={["#ff3653", "#8adb00", "#2c8fff"]} labelColor="white" />
             </GizmoHelper>
             <Suspense fallback={null}>
-              {characterModel === 'default' ? (
-                <MinecraftCharacter
-                  skinImage={skinImage}
-                  pose={currentPose.poseConfig}
-                />
-              ) : characterModel === 'bendable' ? (
-                <BendableMinecraftCharacter
-                  skinImage={skinImage}
-                  pose={currentPose.poseConfig}
-                  facial={currentPose.facial}
-                />
-              ) : (
-                <NewMinecraftCharacter
-                  skinImage={skinImage}
-                  pose={currentPose.poseConfig} // Pass RigState directly
-                  bendable={characterModel === 'new_bendable'}
-                />
-              )}
+              <NewMinecraftCharacter
+                skinImage={skinImage}
+                pose={currentPose.poseConfig}
+                bendable={characterModel === 'bendable'}
+              />
             </Suspense>
             <OrbitControls enablePan enableZoom enableRotate />
             <Environment preset="sunset" />
@@ -274,63 +243,28 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
         <div className="flex absolute right-5 top-5 items-center z-10 bg-gray-800/40 border border-white/5 rounded-2xl p-2 px-4 shadow-2xl backdrop-blur-xl">
           <BottomControlGroup label="MODEL">
             <button
-              onClick={() => handleModelChange('default')}
+              onClick={() => handleModelChange('rigid')}
               className={cn(
                 "px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 border",
-                characterModel === 'default'
+                characterModel === 'rigid'
                   ? "bg-blue-500/10 border-blue-500/50 text-blue-400"
                   : "bg-white/5 border-white/5 text-gray-400 hover:border-white/20"
               )}
             >
-              STANDARD
+              RIGID
             </button>
-            {/* <button
-                onClick={() => handleModelChange('bendable')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 border",
-                  characterModel === 'bendable'
-                    ? "bg-blue-500/10 border-blue-500/50 text-blue-400"
-                    : "bg-white/5 border-white/5 text-gray-400 hover:border-white/20"
-                )}
-              >
-                BENDABLE
-              </button> */}
+            <button
+              onClick={() => handleModelChange('bendable')}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 border",
+                characterModel === 'bendable'
+                  ? "bg-blue-500/10 border-blue-500/50 text-blue-400"
+                  : "bg-white/5 border-white/5 text-gray-400 hover:border-white/20"
+              )}
+            >
+              BENDABLE
+            </button>
           </BottomControlGroup>
-
-          {/* <BottomControlGroup label="NEW SYSTEM">
-              <button
-                onClick={() => handleModelChange('new_rigid')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 border",
-                  characterModel === 'new_rigid'
-                    ? "bg-purple-500/10 border-purple-500/50 text-purple-400"
-                    : "bg-white/5 border-white/5 text-gray-400 hover:border-white/20"
-                )}
-              >
-                RIGID
-              </button>
-              <button
-                onClick={() => handleModelChange('new_bendable')}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest transition-all duration-200 border",
-                  characterModel === 'new_bendable'
-                    ? "bg-purple-500/10 border-purple-500/50 text-purple-400"
-                    : "bg-white/5 border-white/5 text-gray-400 hover:border-white/20"
-                )}
-              >
-                BENDABLE
-              </button>
-            </BottomControlGroup> */}
-
-          {/* <BottomControlGroup label="JOINTS">
-              <ControlButton icon={Accessibility} active />
-              <ControlButton icon={Accessibility} />
-            </BottomControlGroup>
-
-            <BottomControlGroup label="VIEW">
-              <ControlButton icon={RotateCcw} onClick={resetPose} />
-              <ControlButton icon={RotateCw} />
-            </BottomControlGroup> */}
 
           <BottomControlGroup label="UTILITY">
             <ControlButton icon={Camera} onClick={takeScreenshot} />
@@ -394,9 +328,7 @@ export const CharacterViewer = ({ skinImage, onChangeSkinClick, pose }: Characte
               </div>
             )}
             {openPanel === "poseControls" && (
-              characterModel === 'default' ?
-                <StandardPoseControls pose={currentPose} onPoseChange={handlePoseChange} /> :
-                <BendablePoseControls pose={currentPose} onPoseChange={handlePoseChange} />
+              <PoseControls pose={currentPose} onPoseChange={handlePoseChange} />
             )}
           </div>
         </div>
