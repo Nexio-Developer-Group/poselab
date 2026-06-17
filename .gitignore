@@ -1,3 +1,8 @@
 node_modules/
-src/firebase.ts
 .claude/
+.env
+.env.local
+.env.*.local
+build/
+dist/
+.DS_Store
